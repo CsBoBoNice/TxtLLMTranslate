@@ -15,7 +15,15 @@
 
 
 第一阶段需求：
-- 根据StrPrompt类编写一个FilePrompt类，将FilePrompt类作为StrPrompt类的父类，代码编写至FilePrompt.cpp与FilePrompt.h中
-  FilePrompt类包含save，load，getPrompt,changePrompt，resetToDefault,getPromptPath的虚方法，由子类实现
-- 根据SrtTranslator类编写一个FileTranslator类，将FileTranslator类作为SrtTranslator类的父类，代码编写至FileTranslator.cpp与FileTranslator.h中
-  FileTranslator类包含translate,setLog的虚方法，由子类实现
+- 根据SrtParser类编写一个TxtParser类，代码编写至TxtParser.cpp与TxtParser.h中
+  TxtParser类中包含TxtInfo结构体，
+    TxtInfo结构体包含:
+    QString content;       // 原内容
+    QString translateContent; // 翻译内容
+  TxtParser类包含parse段落解析方法，parse方法先将文件内容根据"."或者空行或者等于最大段落长度MAX_LEN分为多个小段落保存在QList<QString>，
+     然后再根据最大段落长度MAX_LEN和最大段落长度MIN_LEN,
+     将QList<QString>中的内容要大于MAX_LEN，但要尽可能接近MAX_LEN，将段落解析保存在QList<TxtInfo> 中的content原内容中
+
+- 根据SrtTranslator类编写一个TxtTranslator类，代码编写至TxtTranslator.cpp与TxtTranslator.h中
+- 根据StrPrompt类编写一个TxtPrompt类，代码编写至TxtPrompt.cpp与TxtPrompt.h中
+
