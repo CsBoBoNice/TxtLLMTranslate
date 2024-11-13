@@ -8,26 +8,26 @@
 #include <QPlainTextEdit>
 #include <QTime>
 #include <QVector>
+#include "FileTranslator.h"
 
-class SrtTranslator
+class SrtTranslator : public FileTranslator
 {
 public:
     SrtTranslator();
     ~SrtTranslator();
     
-    // 设置日志输出控件
-    void setLog(QPlainTextEdit* logOutput) { m_logOutput = logOutput; }
-    
-    // 翻译字幕文件
-    bool translate(const QString& filePath, 
-                  const QString& url, 
+    // 实现父类的虚函数
+    void setLog(QPlainTextEdit* logOutput) override { m_logOutput = logOutput; }
+    bool translate(const QString& inputFilePath,
+                  const QString& outputFilePath,
+                  const QString& url,
                   const QString& apiKey,
                   const QString& model,
-                  bool keepHistory = false);
+                  bool keepHistory = false) override;
 
 private:
-    // 输出日志
-    void outlog(const QString& log);
+    // 实现父类的虚函数
+    void outlog(const QString& log) override;
     
     // 构建完整的翻译提示
     QString buildPrompt(const QString& content, const PromptInfo& promptInfo);
@@ -35,14 +35,13 @@ private:
     SrtParser m_srtParser;
     OpenaiManager* m_openaiManager;
     StrPrompt* m_translatePrompt;
-    QPlainTextEdit* m_logOutput = nullptr;  // 日志输出控件
     
     // 用于保存最近的翻译历史
     struct TranslateHistory {
         QString original;    // 原文
         QString translated;  // 译文
     };
-    QVector<TranslateHistory> m_history;  // 新增成员变量
+    QVector<TranslateHistory> m_history;
 };
 
 #endif // SRTTRANSLATOR_H 

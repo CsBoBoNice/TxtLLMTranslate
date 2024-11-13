@@ -5,34 +5,25 @@
 #include <QVector>
 #include "PromptInfo.h"
 #include <QCoreApplication>
+#include "FilePrompt.h"
 
-class StrPrompt
+class StrPrompt : public FilePrompt
 {
 public:
     // 获取单例实例
     static StrPrompt* getInstance();
     
-    // 获取提示信息
-    PromptInfo getPrompt() const { return m_promptInfo; }
-    
-    // 保存提示信息到JSON文件
-    bool save(const QString& filePath);
-    
-    // 从JSON文件加载提示信息
-    bool load(const QString& filePath);
-    
-    // 修改提示信息
+    // 实现父类的虚函数
+    PromptInfo getPrompt() const override { return m_promptInfo; }
+    bool save(const QString& filePath) override;
+    bool load(const QString& filePath) override;
     void changePrompt(const QString& prompt,
                      const QString& chatPrefix,
                      const QString& chatSuffix,
                      const QVector<QString>& userPromptList,
-                     const QVector<QString>& assistantPromptList);
-    
-    // 恢复默认值
-    void resetToDefault();
-    
-    // 获取默认存储路径
-    static QString getPromptPath();
+                     const QVector<QString>& assistantPromptList) override;
+    void resetToDefault() override;
+    QString getPromptPath() override;
 
 private:
     StrPrompt();
@@ -46,7 +37,6 @@ private:
     void initDefaultPrompt();
     
     static StrPrompt* instance;
-    PromptInfo m_promptInfo;
 };
 
 #endif // TRANSLATEPROMPT_H 
