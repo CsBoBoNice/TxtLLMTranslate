@@ -1,7 +1,7 @@
 #include "TabTranslation.h"
-#include "prompteditor.h"
+#include "PromptEditor.h"
+#include "SrtPrompt.h"
 #include "TxtPrompt.h"
-#include "StrPrompt.h"
 #include <QFileDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -20,18 +20,18 @@ void TranslationTab::createUI()
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
     // 文件路径区域
-    QGroupBox *pathGroup = new QGroupBox("文件路径", this);
+    QGroupBox *pathGroup    = new QGroupBox("文件路径", this);
     QGridLayout *pathLayout = new QGridLayout(pathGroup);
 
-    QLabel *inputLabel = new QLabel("输入路径:", this);
+    QLabel *inputLabel  = new QLabel("输入路径:", this);
     QLabel *outputLabel = new QLabel("输出路径:", this);
-    
-    m_inputPathEdit = new QLineEdit(this);
+
+    m_inputPathEdit  = new QLineEdit(this);
     m_outputPathEdit = new QLineEdit(this);
     m_inputPathEdit->setPlaceholderText("选择待翻译文件所在文件夹");
     m_outputPathEdit->setPlaceholderText("选择翻译结果输出文件夹");
-    
-    m_inputSelectBtn = new QPushButton("浏览", this);
+
+    m_inputSelectBtn  = new QPushButton("浏览", this);
     m_outputSelectBtn = new QPushButton("浏览", this);
 
     pathLayout->addWidget(inputLabel, 0, 0);
@@ -44,8 +44,12 @@ void TranslationTab::createUI()
     mainLayout->addWidget(pathGroup);
 
     // 翻译内容区域
-    QGroupBox *contentGroup = new QGroupBox("翻译内容", this);
+    QGroupBox *contentGroup    = new QGroupBox("翻译内容", this);
     QVBoxLayout *contentLayout = new QVBoxLayout(contentGroup);
+
+    m_originalText = new QTextEdit(this);
+    m_originalText->setReadOnly(true);
+    contentLayout->addWidget(m_originalText);
 
     m_translatedText = new QTextEdit(this);
     m_translatedText->setReadOnly(true);
@@ -55,17 +59,17 @@ void TranslationTab::createUI()
 
     // 操作按钮区域
     QHBoxLayout *buttonLayout = new QHBoxLayout();
-    
+
     m_keepHistoryCheck = new QCheckBox("保留历史记录用于参考", this);
     m_keepHistoryCheck->setChecked(true);
-    
+
     m_fileTypeCombo = new QComboBox(this);
     m_fileTypeCombo->addItem("TXT文件", static_cast<int>(FileType::TXT_FILE));
     m_fileTypeCombo->addItem("SRT字幕", static_cast<int>(FileType::SRT_FILE));
     m_fileTypeCombo->addItem("MD文档", static_cast<int>(FileType::MD_FILE));
-    
+
     m_editPromptButton = new QPushButton("编辑提示", this);
-    m_translateButton = new QPushButton("开始翻译", this);
+    m_translateButton  = new QPushButton("开始翻译", this);
 
     buttonLayout->addWidget(m_keepHistoryCheck);
     buttonLayout->addWidget(m_fileTypeCombo);
@@ -75,13 +79,13 @@ void TranslationTab::createUI()
     mainLayout->addLayout(buttonLayout);
 
     // 日志显示区域
-    QGroupBox *logGroup = new QGroupBox("运行日志", this);
+    QGroupBox *logGroup    = new QGroupBox("运行日志", this);
     QVBoxLayout *logLayout = new QVBoxLayout(logGroup);
 
     m_logText = new QPlainTextEdit(this);
     m_logText->setReadOnly(true);
     logLayout->addWidget(m_logText);
-    
+
     mainLayout->addWidget(logGroup);
 
     // 连接信号槽
@@ -95,13 +99,13 @@ void TranslationTab::createUI()
             m_translatedText->verticalScrollBar(), &QScrollBar::setValue);
     connect(m_translatedText->verticalScrollBar(), &QScrollBar::valueChanged,
             m_originalText->verticalScrollBar(), &QScrollBar::setValue);
-
 }
 
 void TranslationTab::selectInputPath()
 {
     QString dirPath = QFileDialog::getExistingDirectory(this, "选择输入文件夹");
-    if (!dirPath.isEmpty()) {
+    if (!dirPath.isEmpty())
+    {
         m_inputPathEdit->setText(dirPath);
         emit logMessage("已选择输入文件夹: " + dirPath);
     }
@@ -110,7 +114,8 @@ void TranslationTab::selectInputPath()
 void TranslationTab::selectOutputPath()
 {
     QString dirPath = QFileDialog::getExistingDirectory(this, "选择输出文件夹");
-    if (!dirPath.isEmpty()) {
+    if (!dirPath.isEmpty())
+    {
         m_outputPathEdit->setText(dirPath);
         emit logMessage("已选择输出文件夹: " + dirPath);
     }
@@ -118,22 +123,24 @@ void TranslationTab::selectOutputPath()
 
 void TranslationTab::onEditPromptClicked()
 {
-    FilePrompt* prompt = nullptr;
-    FileType type = static_cast<FileType>(m_fileTypeCombo->currentData().toInt());
-    
-    switch (type) {
-        case FileType::TXT_FILE:
-            prompt = TxtPrompt::getInstance();
-            break;
-        case FileType::SRT_FILE:
-            prompt = StrPrompt::getInstance();
-            break;
-        default:
-            QMessageBox::warning(this, "警告", "暂不支持该文件类型的提示词编辑");
-            return;
+    FilePrompt *prompt = nullptr;
+    FileType type      = static_cast<FileType>(m_fileTypeCombo->currentData().toInt());
+
+    switch (type)
+    {
+    case FileType::TXT_FILE:
+        prompt = TxtPrompt::getInstance();
+        break;
+    case FileType::SRT_FILE:
+        prompt = SrtPrompt::getInstance();
+        break;
+    default:
+        QMessageBox::warning(this, "警告", "暂不支持该文件类型的提示词编辑");
+        return;
     }
-    
-    if (prompt) {
+
+    if (prompt)
+    {
         PromptEditor editor(prompt, this);
         editor.exec();
     }
@@ -141,16 +148,18 @@ void TranslationTab::onEditPromptClicked()
 
 void TranslationTab::startTranslate(const QString &url, const QString &apiKey, const QString &model)
 {
-    QString inputPath = m_inputPathEdit->text();
+    QString inputPath  = m_inputPathEdit->text();
     QString outputPath = m_outputPathEdit->text();
 
-    if (inputPath.isEmpty() || outputPath.isEmpty()) {
+    if (inputPath.isEmpty() || outputPath.isEmpty())
+    {
         QMessageBox::warning(this, "警告", "请先选择输入和输出文件夹");
         return;
     }
 
     // 遍历文件夹获取文件列表
-    if (!m_fileManager.traverseDirectory(inputPath)) {
+    if (!m_fileManager.traverseDirectory(inputPath))
+    {
         QMessageBox::warning(this, "错误", "遍历文件夹失败");
         return;
     }
@@ -159,34 +168,50 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
     m_translateButton->setEnabled(false);
     m_translatedText->clear();
 
-    bool keepHistory = m_keepHistoryCheck->isChecked();
-    QList<FileInfo>& files = m_fileManager.getFiles();
-    
-    for (const FileInfo& file : files) {
-        QString outputFilePath = outputPath + "/" + file.fileName;
-        FileTranslator* translator = nullptr;
-        
-        switch (file.fileType) {
-            case FileType::TXT_FILE:
-                translator = new TxtTranslator();
-                break;
-            case FileType::SRT_FILE:
-                translator = new SrtTranslator();
-                break;
-            default:
-                emit logMessage("跳过不支持的文件类型: " + file.fileName);
-                continue;
+    bool keepHistory       = m_keepHistoryCheck->isChecked();
+    QList<FileInfo> &files = m_fileManager.getFiles();
+
+    for (const FileInfo &file : files)
+    {
+        FileTranslator *translator = nullptr;
+
+        switch (file.fileType)
+        {
+        case FileType::TXT_FILE:
+            translator = new TxtTranslator();
+            break;
+        case FileType::SRT_FILE:
+            translator = new SrtTranslator();
+            break;
+        default:
+            emit logMessage("跳过不支持的文件类型: " + file.fileName);
+            continue;
         }
-        
-        if (translator) {
+
+        // 读取并显示原文
+        QFile originalFile(file.filePath);
+        if (originalFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream in(&originalFile);
+            in.setEncoding(QStringConverter::Utf8);
+            m_originalText->setText(in.readAll());
+            originalFile.close();
+        }
+
+        QString outputFilePath = outputPath + "/" + file.fileName;
+
+        if (translator)
+        {
             translator->setLog(m_logText);
-            bool success = translator->translate(file.filePath, outputFilePath, 
-                                              url, apiKey, model, keepHistory);
-            
-            if (success) {
+            bool success = translator->translate(file.filePath, outputFilePath, url, apiKey, model,
+                                                 keepHistory);
+
+            if (success)
+            {
                 // 显示翻译结果
                 QFile resultFile(outputFilePath);
-                if (resultFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                if (resultFile.open(QIODevice::ReadOnly | QIODevice::Text))
+                {
                     QTextStream in(&resultFile);
                     in.setEncoding(QStringConverter::Utf8);
                     m_translatedText->append("=== " + file.fileName + " ===\n");
@@ -194,7 +219,7 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
                     resultFile.close();
                 }
             }
-            
+
             delete translator;
         }
     }

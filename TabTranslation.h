@@ -3,8 +3,8 @@
 
 #include "FileManager.h"
 #include "FileTranslator.h"
-#include "TxtTranslator.h"
 #include "SrtTranslator.h"
+#include "TxtTranslator.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QLineEdit>
@@ -41,11 +41,12 @@ private:
     QLineEdit *m_outputPathEdit;     // 输出路径编辑框
     QPushButton *m_inputSelectBtn;   // 输入路径选择按钮
     QPushButton *m_outputSelectBtn;  // 输出路径选择按钮
+    QTextEdit *m_originalText;       // 原始内容显示
     QTextEdit *m_translatedText;     // 翻译内容显示
     QPushButton *m_translateButton;  // 翻译按钮
-    QComboBox *m_fileTypeCombo;     // 文件类型选择下拉框
+    QComboBox *m_fileTypeCombo;      // 文件类型选择下拉框
     QPushButton *m_editPromptButton; // 编辑提示按钮
-    QPlainTextEdit *m_logText;      // 日志显示
+    QPlainTextEdit *m_logText;       // 日志显示
     QCheckBox *m_keepHistoryCheck;   // 保留历史记录复选框
 
     // 文件管理器

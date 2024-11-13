@@ -7,7 +7,7 @@
 
 SrtTranslator::SrtTranslator()
     : m_openaiManager(OpenaiManager::getInstance())
-    , m_translatePrompt(StrPrompt::getInstance())
+    , m_translatePrompt(SrtPrompt::getInstance())
 {
     qDebug() << "初始化SRT文件翻译";
     m_translatePrompt->load(m_translatePrompt->getPromptPath());
@@ -208,7 +208,7 @@ bool SrtTranslator::translate(const QString& inputFilePath,
     }
     
     outlog("\n=== 翻译任务完成 ===");
-    outlog("输出文件: " + outputPath);
+    outlog("输出文件: " + outputFilePath);
     outlog(QString("成功翻译 %1 条字幕").arg(srtInfoList.size()));
     outlog(QString("总耗时: %1").arg(totalTimeStr));
     return true;

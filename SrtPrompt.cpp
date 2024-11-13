@@ -1,4 +1,4 @@
-#include "StrPrompt.h"
+#include "SrtPrompt.h"
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -6,17 +6,17 @@
 #include <QDebug>
 #include <QCoreApplication>
 
-StrPrompt* StrPrompt::instance = nullptr;
+SrtPrompt* SrtPrompt::instance = nullptr;
 
-StrPrompt* StrPrompt::getInstance()
+SrtPrompt* SrtPrompt::getInstance()
 {
     if (instance == nullptr) {
-        instance = new StrPrompt();
+        instance = new SrtPrompt();
     }
     return instance;
 }
 
-StrPrompt::StrPrompt()
+SrtPrompt::SrtPrompt()
 {
     qDebug() << "初始化翻译提示管理器";
     initDefaultPrompt();
@@ -30,12 +30,12 @@ StrPrompt::StrPrompt()
     qDebug() << "已设置翻译提示信息";
 }
 
-QString StrPrompt::getPromptPath()
+QString SrtPrompt::getPromptPath()
 {
     return QCoreApplication::applicationDirPath() + "/srt_prompt.json";
 }
 
-void StrPrompt::initDefaultPrompt()
+void SrtPrompt::initDefaultPrompt()
 {
     // 设置默认值
     m_promptInfo.prompt = "你是专业翻译员，你需要将待翻译内容成简体中文,翻译后仅输出翻译内容，无需其他解释说明。";
@@ -57,11 +57,11 @@ void StrPrompt::initDefaultPrompt()
     };
 }
 
-StrPrompt::~StrPrompt()
+SrtPrompt::~SrtPrompt()
 {
 }
 
-bool StrPrompt::save(const QString& filePath)
+bool SrtPrompt::save(const QString& filePath)
 {
     QJsonObject jsonObject;
     
@@ -99,7 +99,7 @@ bool StrPrompt::save(const QString& filePath)
     return true;
 }
 
-bool StrPrompt::load(const QString& filePath)
+bool SrtPrompt::load(const QString& filePath)
 {
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -151,7 +151,7 @@ bool StrPrompt::load(const QString& filePath)
     return true;
 }
 
-void StrPrompt::changePrompt(const QString& prompt,
+void SrtPrompt::changePrompt(const QString& prompt,
                                  const QString& chatPrefix,
                                  const QString& chatSuffix,
                                  const QVector<QString>& userPromptList,
@@ -169,7 +169,7 @@ void StrPrompt::changePrompt(const QString& prompt,
     qDebug() << "提示信息已更新";
 }
 
-void StrPrompt::resetToDefault()
+void SrtPrompt::resetToDefault()
 {
     qDebug() << "重置为默认提示信息";
     initDefaultPrompt();

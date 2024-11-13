@@ -1,8 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "settingstab.h"
-#include "translationtab.h"
+#include "TabSettings.h"
+#include "TabTranslation.h"
 #include <QMainWindow>
 #include <QTabWidget>
 

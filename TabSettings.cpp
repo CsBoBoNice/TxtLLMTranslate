@@ -1,5 +1,5 @@
 #include "TabSettings.h"
-#include "openaimanager.h"
+#include "OpenaiManager.h"
 #include <QCoreApplication>
 #include <QFileDialog>
 #include <QGridLayout>

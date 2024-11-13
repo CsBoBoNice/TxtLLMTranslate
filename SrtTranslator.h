@@ -2,8 +2,8 @@
 #define SRTTRANSLATOR_H
 
 #include <QString>
-#include "srtparser.h"
-#include "StrPrompt.h"
+#include "SrtParser.h"
+#include "SrtPrompt.h"
 #include "OpenaiManager.h"
 #include <QPlainTextEdit>
 #include <QTime>
@@ -34,7 +34,7 @@ private:
     
     SrtParser m_srtParser;
     OpenaiManager* m_openaiManager;
-    StrPrompt* m_translatePrompt;
+    SrtPrompt* m_translatePrompt;
     
     // 用于保存最近的翻译历史
     struct TranslateHistory {

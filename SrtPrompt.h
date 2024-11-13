@@ -7,11 +7,11 @@
 #include <QCoreApplication>
 #include "FilePrompt.h"
 
-class StrPrompt : public FilePrompt
+class SrtPrompt : public FilePrompt
 {
 public:
     // 获取单例实例
-    static StrPrompt* getInstance();
+    static SrtPrompt* getInstance();
     
     // 实现父类的虚函数
     PromptInfo getPrompt() const override { return m_promptInfo; }
@@ -26,17 +26,17 @@ public:
     QString getPromptPath() override;
 
 private:
-    StrPrompt();
-    ~StrPrompt();
+    SrtPrompt();
+    ~SrtPrompt();
     
     // 禁用拷贝构造和赋值操作
-    StrPrompt(const StrPrompt&) = delete;
-    StrPrompt& operator=(const StrPrompt&) = delete;
+    SrtPrompt(const SrtPrompt&) = delete;
+    SrtPrompt& operator=(const SrtPrompt&) = delete;
     
     // 初始化默认提示信息
     void initDefaultPrompt();
     
-    static StrPrompt* instance;
+    static SrtPrompt* instance;
 };
 
 #endif // TRANSLATEPROMPT_H 
