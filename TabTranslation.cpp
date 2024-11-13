@@ -45,7 +45,7 @@ void TranslationTab::createUI()
 
     // 翻译内容区域
     QGroupBox *contentGroup    = new QGroupBox("翻译内容", this);
-    QVBoxLayout *contentLayout = new QVBoxLayout(contentGroup);
+    QHBoxLayout *contentLayout = new QHBoxLayout(contentGroup);
 
     m_originalText = new QTextEdit(this);
     m_originalText->setReadOnly(true);
@@ -188,16 +188,6 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
             continue;
         }
 
-        // 读取并显示原文
-        QFile originalFile(file.filePath);
-        if (originalFile.open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-            QTextStream in(&originalFile);
-            in.setEncoding(QStringConverter::Utf8);
-            m_originalText->setText(in.readAll());
-            originalFile.close();
-        }
-
         QString outputFilePath = outputPath + "/" + file.fileName;
 
         if (translator)
@@ -208,14 +198,23 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
 
             if (success)
             {
+                // 读取并显示原文
+                QFile originalFile(file.filePath);
+                if (originalFile.open(QIODevice::ReadOnly | QIODevice::Text))
+                {
+                    QTextStream in(&originalFile);
+                    in.setEncoding(QStringConverter::Utf8);
+                    m_originalText->setText(in.readAll());
+                    originalFile.close();
+                }
+
                 // 显示翻译结果
                 QFile resultFile(outputFilePath);
                 if (resultFile.open(QIODevice::ReadOnly | QIODevice::Text))
                 {
                     QTextStream in(&resultFile);
                     in.setEncoding(QStringConverter::Utf8);
-                    m_translatedText->append("=== " + file.fileName + " ===\n");
-                    m_translatedText->append(in.readAll() + "\n\n");
+                    m_translatedText->setText(in.readAll());
                     resultFile.close();
                 }
             }

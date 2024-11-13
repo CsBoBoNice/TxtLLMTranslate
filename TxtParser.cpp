@@ -55,51 +55,91 @@ QList<QString> TxtParser::splitIntoParagraphs(const QString &content)
 {
     QList<QString> paragraphs;
     QString currentParagraph;
+    int emptyLineCount = 0;  // 用于追踪连续空行数量
 
-    QStringList lines = content.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
+    // 按行分割，保留所有换行符
+    QStringList lines = content.split(QRegularExpression("(\r\n|\n)"), Qt::KeepEmptyParts);
 
-    for (const QString &line : lines)
+    for (int i = 0; i < lines.size(); ++i)
     {
-        QString trimmedLine = line.trimmed();
-        if (trimmedLine.isEmpty())
+        const QString &line = lines[i];
+        bool isEmptyLine = line.trimmed().isEmpty();
+
+        if (isEmptyLine)
         {
-            // 空行表示段落结束
+            emptyLineCount++;
+            // 如果当前段落不为空且遇到空行，保存当前段落
             if (!currentParagraph.isEmpty())
             {
+                // 添加段落及其后的空行
+                currentParagraph += QString("\n").repeated(emptyLineCount);
                 paragraphs.append(currentParagraph);
                 currentParagraph.clear();
             }
+            continue;
+        }
+
+        // 重置空行计数
+        emptyLineCount = 0;
+
+        // 处理非空行
+        if (currentParagraph.isEmpty())
+        {
+            currentParagraph = line;
         }
         else
         {
-            // 处理句号分割
-            QStringList sentences = trimmedLine.split('.', Qt::SkipEmptyParts);
+            // 检查是否有句号
+            QStringList sentences = line.split(QRegularExpression("[.。]"), Qt::KeepEmptyParts);
             for (const QString &sentence : sentences)
             {
-                QString trimmedSentence = sentence.trimmed();
-                if (!trimmedSentence.isEmpty())
+                if (sentence.trimmed().isEmpty()) continue;
+
+                // 检查添加新内容是否会超过最大长度
+                if (currentParagraph.length() + sentence.length() + 1 > m_maxLen)
                 {
-                    if (currentParagraph.length() + trimmedSentence.length() > m_maxLen)
-                    {
-                        if (!currentParagraph.isEmpty())
-                        {
-                            paragraphs.append(currentParagraph);
-                            currentParagraph.clear();
-                        }
-                    }
+                    // 如果当前段落不为空，保存它
                     if (!currentParagraph.isEmpty())
                     {
-                        currentParagraph += " ";
+                        paragraphs.append(currentParagraph);
+                        currentParagraph.clear();
                     }
-                    currentParagraph += trimmedSentence + ".";
+                    currentParagraph = sentence;
+                }
+                else
+                {
+                    // 在句子之间添加原始的句号
+                    if (!currentParagraph.isEmpty())
+                    {
+                        currentParagraph += ".";
+                    }
+                    currentParagraph += sentence;
                 }
             }
+
+            // 如果原行以句号结尾，确保保留
+            if (line.endsWith(".") || line.endsWith("。"))
+            {
+                currentParagraph += ".";
+            }
+        }
+
+        // 检查是否达到最大长度
+        if (currentParagraph.length() >= m_maxLen)
+        {
+            paragraphs.append(currentParagraph);
+            currentParagraph.clear();
         }
     }
 
     // 处理最后一个段落
     if (!currentParagraph.isEmpty())
     {
+        // 如果文件以空行结尾，添加空行
+        if (emptyLineCount > 0)
+        {
+            currentParagraph += QString("\n").repeated(emptyLineCount);
+        }
         paragraphs.append(currentParagraph);
     }
 
@@ -113,34 +153,55 @@ QList<QString> TxtParser::processParagraphs(const QList<QString> &paragraphs)
 
     for (const QString &paragraph : paragraphs)
     {
-        if (currentParagraph.length() + paragraph.length() <= m_maxLen)
+        // 跳过空段落
+        if (paragraph.trimmed().isEmpty())
         {
-            // 可以合并段落
-            if (!currentParagraph.isEmpty())
-            {
-                currentParagraph += " ";
-            }
-            currentParagraph += paragraph;
-        }
-        else
-        {
-            // 当前段落已达到合适长度，保存并开始新段落
-            if (!currentParagraph.isEmpty())
-            {
-                processedParagraphs.append(currentParagraph);
-            }
-            currentParagraph = paragraph;
+            continue;
         }
 
-        // 如果当前段落已经足够长，保存并重置
-        if (currentParagraph.length() >= m_minLen)
+        // 如果当前段落为空，直接使用新段落
+        if (currentParagraph.isEmpty())
+        {
+            currentParagraph = paragraph;
+        }
+        // 如果合并后的长度小于最大长度，尝试合并
+        else if (currentParagraph.length() + paragraph.length() <= m_maxLen)
+        {
+            currentParagraph += "\n" + paragraph;
+        }
+        // 如果当前段落已经达到或超过最小长度，保存并开始新段落
+        else if (currentParagraph.length() >= m_minLen)
         {
             processedParagraphs.append(currentParagraph);
-            currentParagraph.clear();
+            currentParagraph = paragraph;
+        }
+        // 如果当前段落小于最小长度，强制合并
+        else
+        {
+            currentParagraph += "\n" + paragraph;
+        }
+
+        // 如果当前段落超过最大长度，需要进行分割
+        while (currentParagraph.length() > m_maxLen)
+        {
+            // 找到最后一个完整句子的位置
+            int lastDot = currentParagraph.lastIndexOf('.', m_maxLen);
+            if (lastDot == -1 || lastDot < m_minLen)
+            {
+                // 如果找不到合适的句号，就在最大长度处强制截断
+                lastDot = m_maxLen;
+            }
+
+            // 保存当前部分
+            QString part = currentParagraph.left(lastDot + 1);
+            processedParagraphs.append(part);
+
+            // 更新剩余部分
+            currentParagraph = currentParagraph.mid(lastDot + 1).trimmed();
         }
     }
 
-    // 处理最后一个段落
+    // 处理最后一个段落 - 直接添加，不进行合并
     if (!currentParagraph.isEmpty())
     {
         processedParagraphs.append(currentParagraph);

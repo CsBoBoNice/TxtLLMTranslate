@@ -69,15 +69,8 @@ bool TxtTranslator::translate(const QString &inputFilePath, const QString &outpu
             processedAssistantPrompts.append(assistantPrompt);
         }
 
-        // 限制原文显示长度，超过时截断并显示省略号
-        QString displayContent = txtInfoList[i].content;
-        const int maxLengthIn  = 64;
-        if (displayContent.length() > maxLengthIn)
-        {
-            displayContent = displayContent.left(maxLengthIn) + "...";
-        }
         outlog(QString("\n[进度 %1/%2]").arg(i + 1).arg(txtInfoList.size()));
-        outlog("原文: " + displayContent);
+        outlog("原文: " + txtInfoList[i].content);
 
         // 构建当前段落的翻译提示
         QString currentPrompt = buildPrompt(txtInfoList[i].content, promptInfo);
@@ -97,30 +90,9 @@ bool TxtTranslator::translate(const QString &inputFilePath, const QString &outpu
             continue;
         }
 
-        // 处理翻译结果，寻找第一个有效的内容行
-        QStringList lines = translation.split('\n');
-        QString validTranslation;
+        QString validTranslation = translation;
 
-        for (const QString &line : lines)
-        {
-            QString trimmedLine = line.trimmed();
-            if (!trimmedLine.isEmpty())
-            {
-                validTranslation = trimmedLine;
-                validTranslation.remove('\n');
-                validTranslation.replace("\\n", " ");
-
-                // 限制翻译结果长度，超过时截断
-                const int maxLengthOut = 64;
-                if (validTranslation.length() > maxLengthOut)
-                {
-                    validTranslation = validTranslation.left(maxLengthOut);
-                }
-
-                outlog("译文: " + validTranslation);
-                break;
-            }
-        }
+        outlog("译文: " + validTranslation);
 
         // 保存翻译结果
         if (!validTranslation.isEmpty())
