@@ -1,9 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "settingstab.h"
+#include "translationtab.h"
 #include <QMainWindow>
-#include <QPushButton>
-#include "FileManager.h"
+#include <QTabWidget>
 
 class MainWindow : public QMainWindow
 {
@@ -13,11 +14,19 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void handleLogMessage(const QString &message);
+    void handleTranslationRequest();
+
 private:
-    // 测试文件管理器功能
-    void testFileManager();
-    
-    FileManager m_fileManager;        // 文件管理器实例
-    QPushButton* m_testButton;        // 测试按钮
+    void initUI();
+    void loadSettings();
+    void saveSettings();
+
+    QTabWidget *m_tabWidget;
+    SettingsTab *m_settingsTab;
+    TranslationTab *m_translationTab;
+    QString m_settingsPath;
 };
+
 #endif // MAINWINDOW_H

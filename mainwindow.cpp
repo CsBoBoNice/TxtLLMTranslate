@@ -1,72 +1,67 @@
 #include "mainwindow.h"
-#include <QVBoxLayout>
-#include <QWidget>
-#include <QFileDialog>
+#include <QCoreApplication>
 #include <QDebug>
+#include <QSettings>
+#include <QVBoxLayout>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-    // 创建中心部件
-    QWidget* centralWidget = new QWidget(this);
-    setCentralWidget(centralWidget);
-    
-    // 创建垂直布局
-    QVBoxLayout* layout = new QVBoxLayout(centralWidget);
-    
-    // 创建测试按钮
-    m_testButton = new QPushButton("测试文件管理器", this);
-    layout->addWidget(m_testButton);
-    
-    // 连接按钮点击信号到测试槽
-    connect(m_testButton, &QPushButton::clicked, this, &MainWindow::testFileManager);
-    
-    // 设置窗口标题和大小
-    setWindowTitle("文件管理器测试");
-    resize(400, 300);
+    m_settingsPath = QCoreApplication::applicationDirPath() + "/aiservicesettings.ini";
+
+    initUI();
+    loadSettings();
 }
 
 MainWindow::~MainWindow()
 {
+    saveSettings();
 }
 
-void MainWindow::testFileManager()
+void MainWindow::initUI()
 {
-    // 打开文件夹选择对话框
-    QString dirPath = QFileDialog::getExistingDirectory(
-        this,
-        "选择要遍历的文件夹",
-        QDir::homePath(),
-        QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
-    );
-    
-    if (dirPath.isEmpty()) {
-        qDebug() << "未选择文件夹";
-        return;
-    }
-    
-    // 遍历选中的文件夹
-    if (m_fileManager.traverseDirectory(dirPath)) {
-        // 获取并显示文件列表
-        QList<FileInfo> files = m_fileManager.getFiles();
-        qDebug() << "文件列表获取成功，共" << files.size() << "个文件";
-        
-        // 显示每个文件的详细信息
-        for (const FileInfo& file : files) {
-            QString typeStr;
-            switch (file.fileType) {
-                case FileType::TXT_FILE: typeStr = "TXT"; break;
-                case FileType::MD_FILE:  typeStr = "MD"; break;
-                case FileType::RST_FILE: typeStr = "RST"; break;
-                case FileType::SRT_FILE: typeStr = "SRT"; break;
-                default: typeStr = "其他"; break;
-            }
-            
-            qDebug() << "文件名:" << file.fileName
-                     << "类型:" << typeStr
-                     << "路径:" << file.filePath;
-        }
-    } else {
-        qDebug() << "遍历文件夹失败";
-    }
+    QWidget *centralWidget  = new QWidget(this);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    setCentralWidget(centralWidget);
+
+    m_tabWidget = new QTabWidget(this);
+    mainLayout->addWidget(m_tabWidget);
+
+    m_settingsTab    = new SettingsTab(this);
+    m_translationTab = new TranslationTab(this);
+
+    m_tabWidget->addTab(m_settingsTab, "AI服务设置");
+    m_tabWidget->addTab(m_translationTab, "翻译界面");
+
+    connect(m_settingsTab, &SettingsTab::logMessage, this, &MainWindow::handleLogMessage);
+    connect(m_translationTab, &TranslationTab::logMessage, this, &MainWindow::handleLogMessage);
+
+    connect(m_translationTab, &TranslationTab::requestTranslation, this,
+            &MainWindow::handleTranslationRequest);
+
+    setWindowTitle("字幕翻译工具");
+    resize(800, 600);
+}
+
+void MainWindow::loadSettings()
+{
+    m_settingsTab->loadSettings(m_settingsPath);
+}
+
+void MainWindow::saveSettings()
+{
+    m_settingsTab->saveSettings(m_settingsPath);
+}
+
+void MainWindow::handleLogMessage(const QString &message)
+{
+    qDebug() << message;
+}
+
+void MainWindow::handleTranslationRequest()
+{
+    QString url    = m_settingsTab->getUrl();
+    QString apiKey = m_settingsTab->getApiKey();
+    QString model  = m_settingsTab->getModel();
+
+    m_translationTab->startTranslate(url, apiKey, model);
 }
