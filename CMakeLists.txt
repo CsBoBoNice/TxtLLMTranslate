@@ -16,6 +16,9 @@ set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
         mainwindow.h
+        FileManager.cpp
+        FileManager.h
+        FileInfo.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
