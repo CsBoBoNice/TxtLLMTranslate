@@ -15,15 +15,15 @@
 
 
 第一阶段需求：
-- 根据SrtParser类编写一个TxtParser类，代码编写至TxtParser.cpp与TxtParser.h中
-  TxtParser类中包含TxtInfo结构体，
-    TxtInfo结构体包含:
-    QString content;       // 原内容
-    QString translateContent; // 翻译内容
-  TxtParser类包含parse段落解析方法，parse方法先将文件内容根据"."或者空行或者等于最大段落长度MAX_LEN分为多个小段落保存在QList<QString>，
-     然后再根据最大段落长度MAX_LEN和最大段落长度MIN_LEN,
-     将QList<QString>中的内容要大于MAX_LEN，但要尽可能接近MAX_LEN，将段落解析保存在QList<TxtInfo> 中的content原内容中
+- 重构TranslationTab类,
+    - 原“字幕文件”区域改为"文件路径"区域,文件路径区域增加控件设置待翻译文件夹路径与翻译输出路径
+    - 原"字幕内容"区域改为"翻译内容"区域,显示翻译后的内容
+    - 原"保留历史记录用于参考"功能保留
+    - 原"开始翻译"按钮保留
+    - 优化"编辑提示"按钮功能，增加下拉列表用于选择编辑那个文件类型的提示词，默认为txt,
+      点击编辑提示按钮，根据下拉列表选择类型，传入不同的FilePrompt的子类对象
+    - 保留"运行日志"区域
+- 点击"开始翻译"按钮，根据文件路径区域设置的文件夹路径，遍历文件夹中的所有文件，
+  然后遍历QList<FileInfo> m_files;，根据文件类型，调用不同的translate方法
 
-- 根据SrtTranslator类编写一个TxtTranslator类，代码编写至TxtTranslator.cpp与TxtTranslator.h中
-- 根据StrPrompt类编写一个TxtPrompt类，代码编写至TxtPrompt.cpp与TxtPrompt.h中
 
