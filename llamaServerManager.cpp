@@ -18,14 +18,14 @@ LlamaServerManager::~LlamaServerManager()
 }
 
 bool LlamaServerManager::startServer(const QString &program, const QString &model,
-                                   const QString &host, const QString &port, const QString &temp,
-                                   const QString &contextSize, const QString &ngl)
+                                     const QString &host, const QString &port, const QString &temp,
+                                     const QString &contextSize, const QString &ngl)
 {
     if (m_process->state() == QProcess::NotRunning)
     {
         QStringList arguments;
         arguments << "-m" << model << "-c" << contextSize << "--host" << host << "--port" << port
-                 << "-ngl" << ngl << "--temp" << temp;
+                  << "-ngl" << ngl << "--temp" << temp;
 
         QString commandLine = program + " " + arguments.join(" ");
         qDebug() << "启动命令：" << commandLine;

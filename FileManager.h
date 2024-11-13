@@ -1,9 +1,9 @@
 #ifndef FILEMANAGER_H
 #define FILEMANAGER_H
 
-#include <QString>
-#include <QList>
 #include "FileInfo.h"
+#include <QList>
+#include <QString>
 
 class FileManager
 {
@@ -12,16 +12,16 @@ public:
     ~FileManager();
 
     // 遍历指定文件夹下的所有文件
-    bool traverseDirectory(const QString& dirPath);
+    bool traverseDirectory(const QString &dirPath);
 
     // 获取文件列表
-    QList<FileInfo>& getFiles();
+    QList<FileInfo> &getFiles();
 
 private:
     // 判断文件类型
-    FileType determineFileType(const QString& fileName);
+    FileType determineFileType(const QString &fileName);
 
-    QList<FileInfo> m_files;    // 存储文件信息的列表
+    QList<FileInfo> m_files; // 存储文件信息的列表
 };
 
-#endif // FILEMANAGER_H 
+#endif // FILEMANAGER_H

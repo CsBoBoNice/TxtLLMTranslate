@@ -18,9 +18,9 @@ enum class FileType
 // 文件信息结构体
 struct FileInfo
 {
-    QString fileName;                // 文件名
-    QString filePath;                // 文件路径
-    FileType fileType;               // 文件类型
+    QString fileName;  // 文件名
+    QString filePath;  // 文件路径
+    FileType fileType; // 文件类型
 };
 
 #endif // FILEINFO_H

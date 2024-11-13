@@ -40,8 +40,8 @@ set(PROJECT_SOURCES
         TabTranslation.h
         TabSettings.cpp
         TabSettings.h
-        TxtPrompt.cpp
-        TxtPrompt.h
+        TxtParser.cpp
+        TxtParser.h
         TxtTranslator.cpp
         TxtTranslator.h
         TxtPrompt.cpp
