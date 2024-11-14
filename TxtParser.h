@@ -66,8 +66,8 @@ private:
     QVector<TxtInfo> m_txtInfoList;
 
     // 段落长度限制
-    int m_maxLen = 1000; // 最大段落长度
-    int m_minLen = 100;  // 最小段落长度
+    int m_maxLen = 3072; // 最大段落长度
+    int m_minLen = 1024;  // 最小段落长度
 };
 
 #endif // TXTPARSER_H

@@ -8,8 +8,8 @@
 TxtParser::TxtParser()
 {
     qDebug() << "初始化TXT解析器";
-    m_maxLen = 2000; // 设置默认最大长度
-    m_minLen = 100;  // 设置默认最小长度
+    m_maxLen = 3072; // 设置默认最大长度
+    m_minLen = 1024;  // 设置默认最小长度
 }
 
 TxtParser::~TxtParser() {}
@@ -62,7 +62,7 @@ QList<QString> TxtParser::splitIntoParagraphs(const QString &content)
     for (int i = 0; i < lines.size(); ++i)
     {
         const QString &line = lines[i];
-        bool isEmptyLine = line.trimmed().isEmpty();
+        bool isEmptyLine    = line.trimmed().isEmpty();
 
         if (isEmptyLine)
         {
@@ -86,11 +86,11 @@ QList<QString> TxtParser::splitIntoParagraphs(const QString &content)
             {
                 // 检查是否需要段（行末尾为句号或达到最大长度）
                 QString trimmedLine = line.trimmed();
-                bool endsWithPeriod = !trimmedLine.isEmpty() && 
-                    (trimmedLine.endsWith(QLatin1Char('.')) || trimmedLine.endsWith(QString::fromUtf8("。")));
-                
-                if (endsWithPeriod ||
-                    currentParagraph.length() + line.length() + 1 > m_maxLen)
+                bool endsWithPeriod =
+                    !trimmedLine.isEmpty() && (trimmedLine.endsWith(QLatin1Char('.')) ||
+                                               trimmedLine.endsWith(QString::fromUtf8("。")));
+
+                if (endsWithPeriod || currentParagraph.length() + line.length() + 1 > m_maxLen)
                 {
                     paragraphs.append(currentParagraph);
                     currentParagraph = line;
@@ -124,7 +124,15 @@ QList<QString> TxtParser::processParagraphs(const QList<QString> &paragraphs)
         // 如果合并后的长度小于最大长度，尝试合并
         if (currentParagraph.length() + paragraph.length() <= m_maxLen)
         {
-            currentParagraph += "\n" + paragraph;
+            if (currentParagraph.length() >= m_minLen)
+            {
+                processedParagraphs.append(currentParagraph);
+                currentParagraph = "\n" + paragraph;
+            }
+            else
+            {
+                currentParagraph += "\n" + paragraph;
+            }
         }
         // 如果当前段落已经达到或超过最小长度，
         else if (currentParagraph.length() >= m_minLen)
