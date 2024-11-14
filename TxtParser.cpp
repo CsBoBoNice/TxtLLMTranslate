@@ -62,7 +62,7 @@ QList<QString> TxtParser::splitIntoParagraphs(const QString &content)
     for (int i = 0; i < lines.size(); ++i)
     {
         const QString &line = lines[i];
-        bool isEmptyLine    = line.trimmed().isEmpty();
+        bool isEmptyLine = line.trimmed().isEmpty();
 
         if (isEmptyLine)
         {
@@ -84,8 +84,12 @@ QList<QString> TxtParser::splitIntoParagraphs(const QString &content)
             }
             else
             {
-                // 检查是否需要段（遇到句号或达到最大长度）
-                if (line.contains(QRegularExpression("[.。]")) ||
+                // 检查是否需要段（行末尾为句号或达到最大长度）
+                QString trimmedLine = line.trimmed();
+                bool endsWithPeriod = !trimmedLine.isEmpty() && 
+                    (trimmedLine.endsWith(QLatin1Char('.')) || trimmedLine.endsWith(QString::fromUtf8("。")));
+                
+                if (endsWithPeriod ||
                     currentParagraph.length() + line.length() + 1 > m_maxLen)
                 {
                     paragraphs.append(currentParagraph);
