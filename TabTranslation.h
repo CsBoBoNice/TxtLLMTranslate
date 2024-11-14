@@ -12,6 +12,8 @@
 #include <QPushButton>
 #include <QTextEdit>
 #include <QWidget>
+#include <QCoreApplication>
+#include <QDir>
 
 class TranslationTab : public QWidget
 {

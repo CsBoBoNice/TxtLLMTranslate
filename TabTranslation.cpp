@@ -9,10 +9,35 @@
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QVBoxLayout>
+#include <QDir>
 
 TranslationTab::TranslationTab(QWidget *parent) : QWidget(parent)
 {
     createUI();
+    
+    // 创建默认文件夹
+    QString appPath = QCoreApplication::applicationDirPath();
+    QDir dir;
+    
+    // 创建输入文件夹
+    QString inputPath = appPath + "/inputDir";
+    if (!dir.exists(inputPath)) {
+        if (dir.mkpath(inputPath)) {
+            emit logMessage("已创建输入文件夹: " + inputPath);
+        } else {
+            emit logMessage("创建输入文件夹失败: " + inputPath);
+        }
+    }
+    
+    // 创建输出文件夹
+    QString outputPath = appPath + "/outputDir";
+    if (!dir.exists(outputPath)) {
+        if (dir.mkpath(outputPath)) {
+            emit logMessage("已创建输出文件夹: " + outputPath);
+        } else {
+            emit logMessage("创建输出文件夹失败: " + outputPath);
+        }
+    }
 }
 
 void TranslationTab::createUI()
@@ -28,6 +53,12 @@ void TranslationTab::createUI()
 
     m_inputPathEdit  = new QLineEdit(this);
     m_outputPathEdit = new QLineEdit(this);
+    
+    // 设置默认路径
+    QString appPath = QCoreApplication::applicationDirPath();
+    m_inputPathEdit->setText(appPath + "/inputDir");
+    m_outputPathEdit->setText(appPath + "/outputDir");
+    
     m_inputPathEdit->setPlaceholderText("选择待翻译文件所在文件夹");
     m_outputPathEdit->setPlaceholderText("选择翻译结果输出文件夹");
 
