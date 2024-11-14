@@ -5,6 +5,7 @@
 #include "FileTranslator.h"
 #include "SrtTranslator.h"
 #include "TxtTranslator.h"
+#include "MdTranslator.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QCoreApplication>

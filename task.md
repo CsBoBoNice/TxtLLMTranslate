@@ -15,15 +15,17 @@
 
 
 第一阶段需求：
-- 重构TranslationTab类,
-    - 原“字幕文件”区域改为"文件路径"区域,文件路径区域增加控件设置待翻译文件夹路径与翻译输出路径
-    - 原"字幕内容"区域改为"翻译内容"区域,显示翻译后的内容
-    - 原"保留历史记录用于参考"功能保留
-    - 原"开始翻译"按钮保留
-    - 优化"编辑提示"按钮功能，增加下拉列表用于选择编辑那个文件类型的提示词，默认为txt,
-      点击编辑提示按钮，根据下拉列表选择类型，传入不同的FilePrompt的子类对象
-    - 保留"运行日志"区域
-- 点击"开始翻译"按钮，根据文件路径区域设置的文件夹路径，遍历文件夹中的所有文件，
-  然后遍历QList<FileInfo> m_files;，根据文件类型，调用不同的translate方法
+- 根据TxtParser类编写一个MdParser类，代码编写至MdParser.cpp与MdParser.h中
+  MdParser类中包含MdInfo结构体，
+    MdInfo结构体包含:
+    QString content;       // 原内容
+    QString translateContent; // 翻译内容
+  MdParser类包含parse段落解析方法，splitIntoParagraphs方法增加根据Markdown的语法将文件内容根据标题切割段落，其他切割与TxtParser类中splitIntoParagraphs方法一致，
+     processParagraphs保持与TxtParser类中的processParagraphs方法一致，
+      确保切割合并后的content与直接从文件中读取一致
+
+- 根据TxtTranslator类编写一个MdTranslator类，代码编写至MdTranslator.cpp与MdTranslator.h中
+- 根据TxtPrompt类编写一个MdPrompt类，代码编写至MdPrompt.cpp与MdPrompt.h中
+- 在TabTranslation类中添加相关调用
 
 

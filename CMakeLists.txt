@@ -46,6 +46,12 @@ set(PROJECT_SOURCES
         TxtTranslator.h
         TxtPrompt.cpp
         TxtPrompt.h
+        MdParser.cpp
+        MdParser.h
+        MdTranslator.cpp
+        MdTranslator.h
+        MdPrompt.cpp
+        MdPrompt.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
