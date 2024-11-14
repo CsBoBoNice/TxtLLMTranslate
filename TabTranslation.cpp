@@ -10,10 +10,12 @@
 #include <QScrollBar>
 #include <QVBoxLayout>
 #include <QDir>
+#include <QSettings>
 
 TranslationTab::TranslationTab(QWidget *parent) : QWidget(parent)
 {
     createUI();
+    loadParagraphSettings();
     
     // 创建默认文件夹
     QString appPath = QCoreApplication::applicationDirPath();
@@ -287,11 +289,13 @@ void TranslationTab::onSetParagraphLengthClicked()
     QSpinBox *maxLengthBox = new QSpinBox(&dialog);
     QSpinBox *minLengthBox = new QSpinBox(&dialog);
     
-    // 设置SpinBox的范围和初始值
+    // 设置SpinBox的范围
     maxLengthBox->setRange(1000, 10000);
     minLengthBox->setRange(500, 5000);
-    maxLengthBox->setValue(3072);
-    minLengthBox->setValue(1024);
+    
+    // 使用当前保存的值作为初始值
+    maxLengthBox->setValue(m_maxLen);
+    minLengthBox->setValue(m_minLen);
     
     formLayout->addRow("最大长度:", maxLengthBox);
     formLayout->addRow("最小长度:", minLengthBox);
@@ -317,12 +321,32 @@ void TranslationTab::onSetParagraphLengthClicked()
             return;
         }
         
-        // 更新TxtParser的设置
-        emit logMessage(QString("设置段落长度 - 最大长度: %1, 最小长度: %2")
-                       .arg(maxLen).arg(minLen));
-                       
         // 更新段落长度限制
         m_maxLen = maxLen;
         m_minLen = minLen;
+        
+        // 保存设置
+        saveParagraphSettings();
+        
+        emit logMessage(QString("设置段落长度 - 最大长度: %1, 最小长度: %2")
+                       .arg(maxLen).arg(minLen));
     }
+}
+
+void TranslationTab::loadParagraphSettings()
+{
+    QString iniPath = QCoreApplication::applicationDirPath() + "/paragraph.ini";
+    QSettings settings(iniPath, QSettings::IniFormat);
+    
+    m_maxLen = settings.value("Paragraph/MaxLength", 3072).toInt();
+    m_minLen = settings.value("Paragraph/MinLength", 1024).toInt();
+}
+
+void TranslationTab::saveParagraphSettings()
+{
+    QString iniPath = QCoreApplication::applicationDirPath() + "/paragraph.ini";
+    QSettings settings(iniPath, QSettings::IniFormat);
+    
+    settings.setValue("Paragraph/MaxLength", m_maxLen);
+    settings.setValue("Paragraph/MinLength", m_minLen);
 }

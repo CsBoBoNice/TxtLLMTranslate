@@ -38,6 +38,8 @@ private slots:
 private:
     void createUI();
     void updateLog(const QString &log);
+    void loadParagraphSettings();
+    void saveParagraphSettings();
 
     // UI控件
     QLineEdit *m_inputPathEdit;           // 输入路径编辑框
