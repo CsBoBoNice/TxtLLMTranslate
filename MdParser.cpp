@@ -30,6 +30,8 @@ bool MdParser::parse(const QString &filePath)
     QString content = in.readAll();
     file.close();
 
+    qDebug() << "原始内容:" << content;
+
     // 将文本分割成初始段落
     QList<QString> initialParagraphs = splitIntoParagraphs(content);
     qDebug() << "初始分段完成，共" << initialParagraphs.size() << "个段落";
@@ -54,69 +56,78 @@ bool MdParser::parse(const QString &filePath)
 QList<QString> MdParser::splitIntoParagraphs(const QString &content)
 {
     QList<QString> paragraphs;
+    
+    // 使用正则表达式匹配Markdown标题
+    QRegularExpression titleRegex(R"(^#{1,6}\s+.*$)", QRegularExpression::MultilineOption);
+    
+    // 按行分割内容
     QStringList lines = content.split('\n');
+    
     QString currentParagraph;
-    bool isInCodeBlock = false;
-
-    // 遍历每一行
+    QString currentTitle;  // 保存当前标题
+    
     for (int i = 0; i < lines.size(); ++i) {
         QString line = lines[i];
         
-        // 如果遇到新的标题行，且不在代码块内
-        if (line.startsWith('#') && !isInCodeBlock) {
+        // 检查是否是标题行
+        if (titleRegex.match(line.trimmed()).hasMatch()) {
             // 保存之前的段落（如果存在）
             if (!currentParagraph.isEmpty()) {
-                paragraphs.append(currentParagraph);
+                // 如果有标题，确保标题在段落开始
+                if (!currentTitle.isEmpty()) {
+                    paragraphs.append(currentTitle + currentParagraph);
+                } else {
+                    paragraphs.append(currentParagraph);
+                }
                 currentParagraph.clear();
             }
-            // 开始新的段落，以标题行开始
-            currentParagraph = line;
+            // 保存新标题
+            currentTitle = line + "\n";
             continue;
         }
-
-        // 处理代码块标记
-        if (line.startsWith("```")) {
-            isInCodeBlock = !isInCodeBlock;
-            currentParagraph += (currentParagraph.isEmpty() ? "" : "\n") + line;
-            continue;
+        
+        // 处理普通行
+        if (currentParagraph.length() + line.length() > m_maxLen) {
+            // 如果超过最大长度，保存当前段落
+            if (!currentParagraph.isEmpty()) {
+                if (!currentTitle.isEmpty()) {
+                    paragraphs.append(currentTitle + currentParagraph);
+                    currentTitle.clear();
+                } else {
+                    paragraphs.append(currentParagraph);
+                }
+                currentParagraph.clear();
+            }
         }
-
-        // 在代码块内的内容直接添加到当前段落
-        if (isInCodeBlock) {
-            currentParagraph += "\n" + line;
-            continue;
-        }
-
-        // 处理空行
-        if (line.trimmed().isEmpty()) {
-            currentParagraph += "\n" + line;
-            continue;
-        }
-
-        // 处理普通文本行
+        
+        // 添加当前行
         if (currentParagraph.isEmpty()) {
-            currentParagraph = line;
+            currentParagraph = line + "\n";
         } else {
-            currentParagraph += "\n" + line;
+            currentParagraph += line + "\n";
         }
     }
-
+    
     // 处理最后一个段落
     if (!currentParagraph.isEmpty()) {
-        paragraphs.append(currentParagraph);
+        if (!currentTitle.isEmpty()) {
+            paragraphs.append(currentTitle + currentParagraph);
+        } else {
+            paragraphs.append(currentParagraph);
+        }
     }
-
-    // 输出调试信息
+    
+    // 输出段落信息用于调试
     qDebug() << "分段完成，总段落数:" << paragraphs.size();
     qDebug() << "---段落详细信息---";
     for (int i = 0; i < paragraphs.size(); ++i) {
         qDebug() << "段落" << i + 1 << ":";
-        qDebug() << "内容:" << "\"" + paragraphs[i] + "\"";
+        qDebug() << "内容:" << paragraphs[i];
         qDebug() << "长度:" << paragraphs[i].length();
         qDebug() << "是否为空行:" << paragraphs[i].trimmed().isEmpty();
         qDebug() << "----------------";
     }
-
+    
     return paragraphs;
 }
 
@@ -134,23 +145,23 @@ QList<QString> MdParser::processParagraphs(const QList<QString> &paragraphs)
             if (currentParagraph.length() >= m_minLen)
             {
                 processedParagraphs.append(currentParagraph);
-                currentParagraph = "\n" + paragraph;
+                currentParagraph = paragraph;
             }
             else
             {
-                currentParagraph += "\n" + paragraph;
+                currentParagraph += paragraph;
             }
         }
         // 如果当前段落已经达到或超过最小长度，
         else if (currentParagraph.length() >= m_minLen)
         {
             processedParagraphs.append(currentParagraph);
-            currentParagraph = "\n" + paragraph;
+            currentParagraph = paragraph;
         }
         // 如果当前段落小于最小长度，强制合并
         else
         {
-            currentParagraph += "\n" + paragraph;
+            currentParagraph += paragraph;
         }
     }
 
@@ -186,20 +197,28 @@ bool MdParser::save(const QString &filePath, const QVector<MdInfo> &mdInfoList)
         {
             out << info.content;
         }
-        
-        // 如果不是最后一个段落，添加换行符
-        if (&info != &mdInfoList.last())
-        {
-            out << "\n";
-            // 如果当前段落不是空行，额外添加一个换行符
-            if (!info.content.trimmed().isEmpty())
-            {
-                out << "\n";
-            }
-        }
     }
 
     file.close();
     qDebug() << "成功保存MD文件:" << filePath;
+
+    // // 读取保存的文件，验证内容
+
+    // QFile file_read(filePath);
+    // if (!file_read.open(QIODevice::ReadOnly | QIODevice::Text))
+    // {
+    //     qDebug() << "无法打开MD文件:" << filePath;
+    //     return false;
+    // }
+
+    // QTextStream in(&file_read);
+    // in.setEncoding(QStringConverter::Utf8);
+
+    // // 读取整个文件内容
+    // QString content = in.readAll();
+    // file_read.close();
+
+    // qDebug() << "保存内容:" << content;
+
     return true;
-} 
+}
