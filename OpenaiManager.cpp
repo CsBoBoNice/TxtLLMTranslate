@@ -84,8 +84,8 @@ QString OpenaiManager::sendMessage(const QString &url, const QString &apiKey, co
 
     QJsonDocument jsonDoc(jsonObject);
     QString jsonString = jsonDoc.toJson();
-    qDebug() << "\n完整请求JSON:";
-    qDebug().noquote() << jsonString;
+    // qDebug() << "\n完整请求JSON:";
+    // qDebug().noquote() << jsonString;
 
     return sendRequest(jsonString, url, apiKey);
 }
@@ -135,8 +135,8 @@ QString OpenaiManager::sendRequest(const QString &jsonData, const QString &url,
 
     // 解析响应
     QByteArray responseData = reply->readAll();
-    qDebug() << "原始响应数据:";
-    qDebug().noquote() << QString::fromUtf8(responseData);
+    // qDebug() << "原始响应数据:";
+    // qDebug().noquote() << QString::fromUtf8(responseData);
 
     QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
     QJsonObject jsonObject     = jsonResponse.object();

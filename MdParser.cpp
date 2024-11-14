@@ -54,72 +54,67 @@ bool MdParser::parse(const QString &filePath)
 QList<QString> MdParser::splitIntoParagraphs(const QString &content)
 {
     QList<QString> paragraphs;
+    QStringList lines = content.split('\n');
     QString currentParagraph;
+    bool isInCodeBlock = false;
 
-    // 按行分割，保留所有换行符
-    QStringList lines = content.split(QRegularExpression("\r\n|\n"), Qt::KeepEmptyParts);
-
-    // 用于检测Markdown标题的正则表达式
-    QRegularExpression headerRegex("^#{1,6}\\s");
-
-    for (int i = 0; i < lines.size(); ++i)
-    {
-        const QString &line = lines[i];
-        bool isEmptyLine = line.trimmed().isEmpty();
-        bool isHeader = headerRegex.match(line).hasMatch();
-
-        // 如果遇到标题或空行，保存当前段落
-        if (isHeader || isEmptyLine)
-        {
-            if (!currentParagraph.isEmpty())
-            {
+    // 遍历每一行
+    for (int i = 0; i < lines.size(); ++i) {
+        QString line = lines[i];
+        
+        // 如果遇到新的标题行，且不在代码块内
+        if (line.startsWith('#') && !isInCodeBlock) {
+            // 保存之前的段落（如果存在）
+            if (!currentParagraph.isEmpty()) {
                 paragraphs.append(currentParagraph);
                 currentParagraph.clear();
             }
-            // 如果是标题，单独作为一个段落
-            if (isHeader)
-            {
-                paragraphs.append(line);
-            }
-            else if (isEmptyLine)
-            {
-                // 保存空行本身
-                paragraphs.append(line);
-            }
+            // 开始新的段落，以标题行开始
+            currentParagraph = line;
+            continue;
         }
-        else
-        {
-            // 处理普通行
-            if (currentParagraph.isEmpty())
-            {
-                currentParagraph = line;
-            }
-            else
-            {
-                // 检查是否需要分段（行末尾为句号或达到最大长度）
-                QString trimmedLine = line.trimmed();
-                bool endsWithPeriod = !trimmedLine.isEmpty() && 
-                    (trimmedLine.endsWith(QLatin1Char('.')) || 
-                     trimmedLine.endsWith(QString::fromUtf8("。")));
 
-                if (endsWithPeriod || currentParagraph.length() + line.length() + 1 > m_maxLen)
-                {
-                    paragraphs.append(currentParagraph);
-                    currentParagraph = line;
-                }
-                else
-                {
-                    // 在同一段落内添加新行，保持原始格式
-                    currentParagraph += "\n" + line;
-                }
-            }
+        // 处理代码块标记
+        if (line.startsWith("```")) {
+            isInCodeBlock = !isInCodeBlock;
+            currentParagraph += (currentParagraph.isEmpty() ? "" : "\n") + line;
+            continue;
+        }
+
+        // 在代码块内的内容直接添加到当前段落
+        if (isInCodeBlock) {
+            currentParagraph += "\n" + line;
+            continue;
+        }
+
+        // 处理空行
+        if (line.trimmed().isEmpty()) {
+            currentParagraph += "\n" + line;
+            continue;
+        }
+
+        // 处理普通文本行
+        if (currentParagraph.isEmpty()) {
+            currentParagraph = line;
+        } else {
+            currentParagraph += "\n" + line;
         }
     }
 
     // 处理最后一个段落
-    if (!currentParagraph.isEmpty())
-    {
+    if (!currentParagraph.isEmpty()) {
         paragraphs.append(currentParagraph);
+    }
+
+    // 输出调试信息
+    qDebug() << "分段完成，总段落数:" << paragraphs.size();
+    qDebug() << "---段落详细信息---";
+    for (int i = 0; i < paragraphs.size(); ++i) {
+        qDebug() << "段落" << i + 1 << ":";
+        qDebug() << "内容:" << "\"" + paragraphs[i] + "\"";
+        qDebug() << "长度:" << paragraphs[i].length();
+        qDebug() << "是否为空行:" << paragraphs[i].trimmed().isEmpty();
+        qDebug() << "----------------";
     }
 
     return paragraphs;
@@ -130,22 +125,8 @@ QList<QString> MdParser::processParagraphs(const QList<QString> &paragraphs)
     QList<QString> processedParagraphs;
     QString currentParagraph;
 
-    // 用于检测Markdown标题的正则表达式
-    QRegularExpression headerRegex("^#{1,6}\\s");
-
     for (const QString &paragraph : paragraphs)
     {
-        // 如果是标题或空行，直接添加不进行合并
-        if (headerRegex.match(paragraph).hasMatch() || paragraph.trimmed().isEmpty())
-        {
-            if (!currentParagraph.isEmpty())
-            {
-                processedParagraphs.append(currentParagraph);
-                currentParagraph.clear();
-            }
-            processedParagraphs.append(paragraph);
-            continue;
-        }
 
         // 如果合并后的长度小于最大长度，尝试合并
         if (currentParagraph.length() + paragraph.length() <= m_maxLen)
@@ -153,41 +134,27 @@ QList<QString> MdParser::processParagraphs(const QList<QString> &paragraphs)
             if (currentParagraph.length() >= m_minLen)
             {
                 processedParagraphs.append(currentParagraph);
-                currentParagraph = paragraph;
-            }
-            else
-            {
-                if (currentParagraph.isEmpty())
-                {
-                    currentParagraph = paragraph;
-                }
-                else
-                {
-                    currentParagraph += "\n" + paragraph;
-                }
-            }
-        }
-        // 如果当前段落已经达到或超过最小长度
-        else if (currentParagraph.length() >= m_minLen)
-        {
-            processedParagraphs.append(currentParagraph);
-            currentParagraph = paragraph;
-        }
-        // 如果当前段落小于最小长度，强制合并
-        else
-        {
-            if (currentParagraph.isEmpty())
-            {
-                currentParagraph = paragraph;
+                currentParagraph = "\n" + paragraph;
             }
             else
             {
                 currentParagraph += "\n" + paragraph;
             }
         }
+        // 如果当前段落已经达到或超过最小长度，
+        else if (currentParagraph.length() >= m_minLen)
+        {
+            processedParagraphs.append(currentParagraph);
+            currentParagraph = "\n" + paragraph;
+        }
+        // 如果当前段落小于最小长度，强制合并
+        else
+        {
+            currentParagraph += "\n" + paragraph;
+        }
     }
 
-    // 处理最后一个段落
+    // 处理最后一个段落 - 直接添加，不进行合并
     if (!currentParagraph.isEmpty())
     {
         processedParagraphs.append(currentParagraph);

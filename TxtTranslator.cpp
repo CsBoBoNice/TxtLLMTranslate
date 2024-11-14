@@ -10,6 +10,8 @@ TxtTranslator::TxtTranslator(int maxLen, int minLen)
 {
     qDebug() << "初始化TXT文件翻译";
     m_translatePrompt->load(m_translatePrompt->getPromptPath());
+    m_txtParser.setMaxLength(m_maxLen);
+    m_txtParser.setMinLength(m_minLen);
 }
 
 TxtTranslator::~TxtTranslator() {}

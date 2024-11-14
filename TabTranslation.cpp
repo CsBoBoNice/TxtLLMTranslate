@@ -256,6 +256,7 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
                 {
                     QTextStream in(&originalFile);
                     in.setEncoding(QStringConverter::Utf8);
+                    m_originalText->clear();
                     m_originalText->setText(in.readAll());
                     originalFile.close();
                 }
@@ -266,6 +267,7 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
                 {
                     QTextStream in(&resultFile);
                     in.setEncoding(QStringConverter::Utf8);
+                    m_translatedText->clear();
                     m_translatedText->setText(in.readAll());
                     resultFile.close();
                 }
@@ -305,8 +307,8 @@ void TranslationTab::onSetParagraphLengthClicked()
     QSpinBox *minLengthBox  = new QSpinBox(&dialog);
 
     // 设置SpinBox的范围
-    maxLengthBox->setRange(1000, 10000);
-    minLengthBox->setRange(500, 5000);
+    maxLengthBox->setRange(1024, 4096);
+    minLengthBox->setRange(64, 1024);
 
     // 使用当前保存的值作为初始值
     maxLengthBox->setValue(m_maxLen);

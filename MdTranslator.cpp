@@ -10,6 +10,8 @@ MdTranslator::MdTranslator(int maxLen, int minLen)
 {
     qDebug() << "初始化MD文件翻译";
     m_translatePrompt->load(m_translatePrompt->getPromptPath());
+    m_mdParser.setMaxLength(m_maxLen);
+    m_mdParser.setMinLength(m_minLen);
 }
 
 MdTranslator::~MdTranslator() {}
