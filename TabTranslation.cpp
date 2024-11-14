@@ -99,11 +99,13 @@ void TranslationTab::createUI()
     m_fileTypeCombo->addItem("SRT字幕", static_cast<int>(FileType::SRT_FILE));
     m_fileTypeCombo->addItem("MD文档", static_cast<int>(FileType::MD_FILE));
 
+    m_setParagraphLengthBtn = new QPushButton("设置段落长度", this);
     m_editPromptButton = new QPushButton("编辑提示", this);
     m_translateButton  = new QPushButton("开始翻译", this);
 
     buttonLayout->addWidget(m_keepHistoryCheck);
     buttonLayout->addWidget(m_fileTypeCombo);
+    buttonLayout->addWidget(m_setParagraphLengthBtn);
     buttonLayout->addWidget(m_editPromptButton);
     buttonLayout->addWidget(m_translateButton);
 
@@ -124,6 +126,8 @@ void TranslationTab::createUI()
     connect(m_outputSelectBtn, &QPushButton::clicked, this, &TranslationTab::selectOutputPath);
     connect(m_translateButton, &QPushButton::clicked, this, &TranslationTab::onTranslateClicked);
     connect(m_editPromptButton, &QPushButton::clicked, this, &TranslationTab::onEditPromptClicked);
+    connect(m_setParagraphLengthBtn, &QPushButton::clicked, 
+            this, &TranslationTab::onSetParagraphLengthClicked);
 
     // 添加滚动条同步
     connect(m_originalText->verticalScrollBar(), &QScrollBar::valueChanged,
@@ -209,7 +213,7 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
         switch (file.fileType)
         {
         case FileType::TXT_FILE:
-            translator = new TxtTranslator();
+            translator = new TxtTranslator(m_maxLen, m_minLen);
             break;
         case FileType::SRT_FILE:
             translator = new SrtTranslator();
@@ -267,4 +271,58 @@ void TranslationTab::updateLog(const QString &log)
 void TranslationTab::onTranslateClicked()
 {
     emit requestTranslation();
+}
+
+void TranslationTab::onSetParagraphLengthClicked()
+{
+    // 创建对话框
+    QDialog dialog(this);
+    dialog.setWindowTitle("设置段落长度");
+    
+    // 创建布局
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+    
+    // 创建输入控件
+    QFormLayout *formLayout = new QFormLayout();
+    QSpinBox *maxLengthBox = new QSpinBox(&dialog);
+    QSpinBox *minLengthBox = new QSpinBox(&dialog);
+    
+    // 设置SpinBox的范围和初始值
+    maxLengthBox->setRange(1000, 10000);
+    minLengthBox->setRange(500, 5000);
+    maxLengthBox->setValue(3072);
+    minLengthBox->setValue(1024);
+    
+    formLayout->addRow("最大长度:", maxLengthBox);
+    formLayout->addRow("最小长度:", minLengthBox);
+    layout->addLayout(formLayout);
+    
+    // 添加按钮
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+        Qt::Horizontal, &dialog);
+    layout->addWidget(buttonBox);
+    
+    // 连接按钮信号
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    
+    // 显示对话框
+    if (dialog.exec() == QDialog::Accepted) {
+        int maxLen = maxLengthBox->value();
+        int minLen = minLengthBox->value();
+        
+        if (maxLen <= minLen) {
+            QMessageBox::warning(this, "警告", "最大长度必须大于最小长度！");
+            return;
+        }
+        
+        // 更新TxtParser的设置
+        emit logMessage(QString("设置段落长度 - 最大长度: %1, 最小长度: %2")
+                       .arg(maxLen).arg(minLen));
+                       
+        // 更新段落长度限制
+        m_maxLen = maxLen;
+        m_minLen = minLen;
+    }
 }

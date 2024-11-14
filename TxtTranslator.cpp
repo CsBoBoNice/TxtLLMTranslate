@@ -4,8 +4,9 @@
 #include <QStringList>
 #include <QTime>
 
-TxtTranslator::TxtTranslator()
-    : m_openaiManager(OpenaiManager::getInstance()), m_translatePrompt(TxtPrompt::getInstance())
+TxtTranslator::TxtTranslator(int maxLen, int minLen)
+    : m_openaiManager(OpenaiManager::getInstance()), m_translatePrompt(TxtPrompt::getInstance()),
+      m_maxLen(maxLen), m_minLen(minLen)
 {
     qDebug() << "初始化TXT文件翻译";
     m_translatePrompt->load(m_translatePrompt->getPromptPath());

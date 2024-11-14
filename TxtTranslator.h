@@ -13,7 +13,7 @@
 class TxtTranslator : public FileTranslator
 {
 public:
-    TxtTranslator();
+    TxtTranslator(int maxLen, int minLen);
     ~TxtTranslator();
 
     // 实现父类的虚函数
@@ -42,6 +42,10 @@ private:
         QString translated; // 译文
     };
     QVector<TranslateHistory> m_history;
+
+    // 段落长度限制
+    int m_maxLen = 3072; // 最大段落长度
+    int m_minLen = 1024; // 最小段落长度
 };
 
 #endif // TXTTRANSLATOR_H
