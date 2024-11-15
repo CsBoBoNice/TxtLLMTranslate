@@ -54,62 +54,60 @@ bool TxtParser::parse(const QString &filePath)
 QList<QString> TxtParser::splitIntoParagraphs(const QString &content)
 {
     QList<QString> paragraphs;
+    
+    // 按行分割内容
+    QStringList lines = content.split('\n');
+    
     QString currentParagraph;
-
-    // 按行分割，保留所有换行符
-    QStringList lines = content.split(QRegularExpression("\r\n|\n"), Qt::KeepEmptyParts);
-
-    for (int i = 0; i < lines.size(); ++i)
-    {
-        const QString &line = lines[i];
-        bool isEmptyLine    = line.trimmed().isEmpty();
-
-        if (isEmptyLine)
-        {
-            // 如果当前段落不为空，保存它
-            if (!currentParagraph.isEmpty())
-            {
-                paragraphs.append(currentParagraph);
-                currentParagraph.clear();
-            }
-            // 保存空行本身
-            paragraphs.append(line);
+    
+    for (int i = 0; i < lines.size(); ++i) {
+        QString line = lines[i];
+        
+        // 添加当前行（保留原始格式，包括缩进）
+        if (currentParagraph.isEmpty()) {
+            currentParagraph = line + "\n";
+        } else {
+            currentParagraph += line + "\n";
         }
-        else
-        {
-            // 处理非空行
-            if (currentParagraph.isEmpty())
-            {
-                currentParagraph = line;
-            }
-            else
-            {
-                // 检查是否需要段（行末尾为句号或达到最大长度）
-                QString trimmedLine = line.trimmed();
-                bool endsWithPeriod =
-                    !trimmedLine.isEmpty() && (trimmedLine.endsWith(QLatin1Char('.')) ||
-                                               trimmedLine.endsWith(QString::fromUtf8("。")));
-
-                if (endsWithPeriod || currentParagraph.length() + line.length() + 1 > m_maxLen)
-                {
-                    paragraphs.append(currentParagraph);
-                    currentParagraph = line;
-                }
-                else
-                {
-                    // 在同一段落内添加新行，保持原始格式
-                    currentParagraph += "\n" + line;
-                }
-            }
+        
+        // 检查是否需要结束当前段落
+        bool shouldEndParagraph = false;
+        
+        // 情况1: 当前行是空行
+        if (line.trimmed().isEmpty()) {
+            shouldEndParagraph = true;
+        }
+        // 情况2: 当前行以句号结尾
+        else if (line.trimmed().endsWith("。") || line.trimmed().endsWith(".")) {
+            shouldEndParagraph = true;
+        }
+        // 情况3: 当前段落长度超过最大长度
+        else if (currentParagraph.length() > m_maxLen) {
+            shouldEndParagraph = true;
+        }
+        
+        // 如果需要结束段落，保存当前段落并清空
+        if (shouldEndParagraph && !currentParagraph.isEmpty()) {
+            paragraphs.append(currentParagraph);
+            currentParagraph.clear();
         }
     }
-
+    
     // 处理最后一个段落
-    if (!currentParagraph.isEmpty())
-    {
+    if (!currentParagraph.isEmpty()) {
         paragraphs.append(currentParagraph);
     }
-
+    
+    // 输出段落信息用于调试
+    qDebug() << "分段完成，总段落数:" << paragraphs.size();
+    for (int i = 0; i < paragraphs.size(); ++i) {
+        qDebug() << QString("段落 %1 (长度: %2):").arg(i + 1).arg(paragraphs[i].length());
+        qDebug() << "内容预览:" << paragraphs[i];
+        qDebug() << "是否以句号结尾:" << (paragraphs[i].trimmed().endsWith("。") || paragraphs[i].trimmed().endsWith("."));
+        qDebug() << "是否包含空行:" << paragraphs[i].contains(QRegularExpression("^\\s*$", QRegularExpression::MultilineOption));
+        qDebug() << "----------------";
+    }
+    
     return paragraphs;
 }
 
@@ -127,23 +125,23 @@ QList<QString> TxtParser::processParagraphs(const QList<QString> &paragraphs)
             if (currentParagraph.length() >= m_minLen)
             {
                 processedParagraphs.append(currentParagraph);
-                currentParagraph = "\n" + paragraph;
+                currentParagraph = paragraph;
             }
             else
             {
-                currentParagraph += "\n" + paragraph;
+                currentParagraph += paragraph;
             }
         }
         // 如果当前段落已经达到或超过最小长度，
         else if (currentParagraph.length() >= m_minLen)
         {
             processedParagraphs.append(currentParagraph);
-            currentParagraph = "\n" + paragraph;
+            currentParagraph = paragraph;
         }
         // 如果当前段落小于最小长度，强制合并
         else
         {
-            currentParagraph += "\n" + paragraph;
+            currentParagraph += paragraph;
         }
     }
 
@@ -179,10 +177,28 @@ bool TxtParser::save(const QString &filePath, const QVector<TxtInfo> &txtInfoLis
         {
             out << info.content;
         }
-        out << "\n\n"; // 段落之间添加空行
     }
 
     file.close();
-    qDebug() << "成功保存TXT文件:" << filePath;
+    qDebug() << "成功保存MD文件:" << filePath;
+
+    // // 读取保存的文件，验证内容
+
+    // QFile file_read(filePath);
+    // if (!file_read.open(QIODevice::ReadOnly | QIODevice::Text))
+    // {
+    //     qDebug() << "无法打开MD文件:" << filePath;
+    //     return false;
+    // }
+
+    // QTextStream in(&file_read);
+    // in.setEncoding(QStringConverter::Utf8);
+
+    // // 读取整个文件内容
+    // QString content = in.readAll();
+    // file_read.close();
+
+    // qDebug() << "保存内容:" << content;
+
     return true;
 }
