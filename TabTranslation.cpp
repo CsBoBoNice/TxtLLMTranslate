@@ -205,6 +205,7 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
 
     emit logMessage("开始翻译任务...");
     m_translateButton->setEnabled(false);
+    m_originalText->clear();
     m_translatedText->clear();
 
     bool keepHistory       = m_keepHistoryCheck->isChecked();

@@ -57,28 +57,75 @@ QList<QString> MdParser::splitIntoParagraphs(const QString &content)
 {
     QList<QString> paragraphs;
 
-    // 使用正则表达式匹配Markdown标题
+    // 使用正则表达式匹配Markdown标题和代码块
     QRegularExpression titleRegex(R"(^#{1,6}\s+.*$)", QRegularExpression::MultilineOption);
+    QRegularExpression codeBlockRegex(R"(^```.*$)");
 
     // 按行分割内容
     QStringList lines = content.split('\n');
 
     QString currentParagraph;
+    bool inCodeBlock = false;  // 标记是否在代码块内
 
     for (int i = 0; i < lines.size(); ++i)
     {
         QString line = lines[i];
+        
+        // 检查是否是代码块标记
+        if (codeBlockRegex.match(line.trimmed()).hasMatch())
+        {
+            // 如果已经在代码块内，说明这是结束标记
+            if (inCodeBlock)
+            {
+                currentParagraph += line + "\n";
+                paragraphs.append(currentParagraph);
+                currentParagraph.clear();
+                inCodeBlock = false;
+                continue;
+            }
+            // 否则这是开始标记
+            else
+            {
+                // 保存之前的非代码块段落（如果存在）
+                if (!currentParagraph.isEmpty())
+                {
+                    paragraphs.append(currentParagraph);
+                    currentParagraph.clear();
+                }
+                currentParagraph = line + "\n";
+                inCodeBlock = true;
+                continue;
+            }
+        }
 
+        // 代码块内的处理逻辑
+        if (inCodeBlock)
+        {
+            // 检查添加当前行是否会超过最大长度
+            if (currentParagraph.length() + line.length() > m_maxLen)
+            {
+                // 在当前段落末尾添加代码块结束标记
+                currentParagraph += "```\n\n";
+                paragraphs.append(currentParagraph);
+                // 新段落以代码块开始标记开头
+                currentParagraph = "```\n" + line + "\n";
+            }
+            else
+            {
+                currentParagraph += line + "\n";
+            }
+            continue;
+        }
+
+        // 非代码块内的处理逻辑
         // 检查是否是标题行
         if (titleRegex.match(line.trimmed()).hasMatch())
         {
-            // 保存之前的段落（如果存在）
             if (!currentParagraph.isEmpty())
             {
                 paragraphs.append(currentParagraph);
                 currentParagraph.clear();
             }
-
             currentParagraph = line + "\n";
             continue;
         }
@@ -86,7 +133,6 @@ QList<QString> MdParser::splitIntoParagraphs(const QString &content)
         // 处理普通行
         if (currentParagraph.length() + line.length() > m_maxLen)
         {
-            // 如果超过最大长度，保存当前段落
             if (!currentParagraph.isEmpty())
             {
                 paragraphs.append(currentParagraph);
@@ -104,7 +150,7 @@ QList<QString> MdParser::splitIntoParagraphs(const QString &content)
             currentParagraph += line + "\n";
         }
 
-        // 当前行以句号结尾
+        // 当前行以句号结尾（仅在非代码块内判断）
         if (line.trimmed().endsWith("。") || line.trimmed().endsWith("."))
         {
             paragraphs.append(currentParagraph);
@@ -115,6 +161,11 @@ QList<QString> MdParser::splitIntoParagraphs(const QString &content)
     // 处理最后一个段落
     if (!currentParagraph.isEmpty())
     {
+        // 如果最后在代码块内，确保添加结束标记
+        if (inCodeBlock && !currentParagraph.trimmed().endsWith("```"))
+        {
+            currentParagraph += "```\n";
+        }
         paragraphs.append(currentParagraph);
     }
 
