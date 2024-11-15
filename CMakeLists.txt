@@ -52,6 +52,8 @@ set(PROJECT_SOURCES
         MdTranslator.h
         MdPrompt.cpp
         MdPrompt.h
+        TranslationProgress.cpp
+        TranslationProgress.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

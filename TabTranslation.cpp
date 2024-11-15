@@ -113,12 +113,14 @@ void TranslationTab::createUI()
     m_setParagraphLengthBtn = new QPushButton("设置段落长度", this);
     m_editPromptButton      = new QPushButton("编辑提示", this);
     m_translateButton       = new QPushButton("开始翻译", this);
+    QPushButton *clearProgressBtn = new QPushButton("清除翻译进度", this);
 
     buttonLayout->addWidget(m_keepHistoryCheck);
     buttonLayout->addWidget(m_fileTypeCombo);
     buttonLayout->addWidget(m_setParagraphLengthBtn);
     buttonLayout->addWidget(m_editPromptButton);
     buttonLayout->addWidget(m_translateButton);
+    buttonLayout->addWidget(clearProgressBtn);
 
     mainLayout->addLayout(buttonLayout);
 
@@ -129,6 +131,7 @@ void TranslationTab::createUI()
     connect(m_editPromptButton, &QPushButton::clicked, this, &TranslationTab::onEditPromptClicked);
     connect(m_setParagraphLengthBtn, &QPushButton::clicked, this,
             &TranslationTab::onSetParagraphLengthClicked);
+    connect(clearProgressBtn, &QPushButton::clicked, this, &TranslationTab::clearTranslationProgress);
 
     // 添加滚动条同步
     connect(m_originalText->verticalScrollBar(), &QScrollBar::valueChanged,
@@ -205,15 +208,46 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
 
     emit logMessage("开始翻译任务...");
     m_translateButton->setEnabled(false);
+    m_isTranslating = true;
     m_originalText->clear();
     m_translatedText->clear();
 
     bool keepHistory = m_keepHistoryCheck->isChecked();
     QList<FileInfo> &files = m_fileManager.getFiles();
+    
+    // 检查是否有未完成的任务
+    QString lastFile;
+    bool hasUnfinished = TranslationProgress::getInstance().hasUnfinishedTask(inputPath, outputPath, lastFile);
+    bool skipFiles = hasUnfinished;
+    
+    if (hasUnfinished) {
+        auto result = QMessageBox::question(this, "继续翻译",
+            "检测到上次未完成的翻译任务，是否从中断处继续？",
+            QMessageBox::Yes | QMessageBox::No);
+        
+        skipFiles = (result == QMessageBox::Yes);
+        if (skipFiles) {
+            emit logMessage("将从文件 " + lastFile + " 继续翻译");
+        }
+    }
 
     for (const FileInfo &file : files)
     {
+        // 如果需要跳过之前已翻译的文件
+        if (skipFiles) {
+            if (file.fileName == lastFile) {
+                skipFiles = false;
+            }
+            if (skipFiles) {
+                continue;
+            }
+        }
+
+        // 保存当前正在翻译的文件信息
+        TranslationProgress::getInstance().saveProgress(inputPath, outputPath, file.fileName);
+        
         FileTranslator *translator = nullptr;
+        bool success = false;
 
         // 计算相对路径
         QString relativePath = QDir(inputPath).relativeFilePath(QFileInfo(file.filePath).path());
@@ -248,8 +282,8 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
         if (translator)
         {
             translator->setLog(m_logOutput);
-            bool success = translator->translate(file.filePath, outputFilePath, url, apiKey, model,
-                                                 keepHistory);
+            success = translator->translate(file.filePath, outputFilePath, url, apiKey, model,
+                                             keepHistory);
 
             // 读取并显示原文
             QFile originalFile(file.filePath);
@@ -280,13 +314,20 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
             else
             {
                 emit logMessage("翻译失败！！！");
+                m_translateButton->setEnabled(true);
+                m_isTranslating = false;
+                delete translator;
+                return;
             }
 
             delete translator;
         }
     }
 
+    // 翻译完成后清除进度
+    TranslationProgress::getInstance().clearProgress();
     m_translateButton->setEnabled(true);
+    m_isTranslating = false;
 }
 
 void TranslationTab::updateLog(const QString &log)
@@ -379,4 +420,10 @@ void TranslationTab::saveParagraphSettings()
 
     settings.setValue("Paragraph/MaxLength", m_maxLen);
     settings.setValue("Paragraph/MinLength", m_minLen);
+}
+
+void TranslationTab::clearTranslationProgress()
+{
+    TranslationProgress::getInstance().clearProgress();
+    emit logMessage("已清除翻译进度记录");
 }

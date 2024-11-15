@@ -6,6 +6,7 @@
 #include "MdTranslator.h"
 #include "SrtTranslator.h"
 #include "TxtTranslator.h"
+#include "TranslationProgress.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QCoreApplication>
@@ -35,6 +36,7 @@ private slots:
     void onTranslateClicked();
     void onEditPromptClicked();
     void onSetParagraphLengthClicked();
+    void clearTranslationProgress();
 
 private:
     void createUI();
@@ -63,6 +65,8 @@ private:
     int m_minLen = 1024; // 最小段落长度
 
     QPlainTextEdit *m_logOutput; // 日志输出指针
+
+    bool m_isTranslating = false;
 
 public:
     void setLog(QPlainTextEdit *logOutput)
