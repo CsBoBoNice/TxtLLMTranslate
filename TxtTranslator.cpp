@@ -44,6 +44,8 @@ bool TxtTranslator::translate(const QString &inputFilePath, const QString &outpu
     // 用于计算平均处理时间
     QVector<int> processingTimes;
 
+    // 错误计数
+    int errCount = 0;
     // 遍历文本列表进行翻译
     for (int i = 0; i < txtInfoList.size(); ++i)
     {
@@ -90,6 +92,7 @@ bool TxtTranslator::translate(const QString &inputFilePath, const QString &outpu
         {
             outlog("[错误] 翻译失败，跳过当前段落");
             outlog("-------------------");
+            errCount++;
             continue;
         }
 
@@ -205,7 +208,8 @@ bool TxtTranslator::translate(const QString &inputFilePath, const QString &outpu
     outlog("输出文件: " + outputFilePath);
     outlog(QString("成功翻译 %1 个段落").arg(txtInfoList.size()));
     outlog(QString("总耗时: %1").arg(totalTimeStr));
-    return true;
+
+    return errCount == 0 ? true : false;
 }
 
 QString TxtTranslator::buildPrompt(const QString &content, const PromptInfo &promptInfo)

@@ -248,29 +248,35 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
             bool success = translator->translate(file.filePath, outputFilePath, url, apiKey, model,
                                                  keepHistory);
 
+            // 读取并显示原文
+            QFile originalFile(file.filePath);
+            if (originalFile.open(QIODevice::ReadOnly | QIODevice::Text))
+            {
+                QTextStream in(&originalFile);
+                in.setEncoding(QStringConverter::Utf8);
+                m_originalText->clear();
+                m_originalText->setText(in.readAll());
+                originalFile.close();
+            }
+
+            // 显示翻译结果
+            QFile resultFile(outputFilePath);
+            if (resultFile.open(QIODevice::ReadOnly | QIODevice::Text))
+            {
+                QTextStream in(&resultFile);
+                in.setEncoding(QStringConverter::Utf8);
+                m_translatedText->clear();
+                m_translatedText->setText(in.readAll());
+                resultFile.close();
+            }
+
             if (success)
             {
-                // 读取并显示原文
-                QFile originalFile(file.filePath);
-                if (originalFile.open(QIODevice::ReadOnly | QIODevice::Text))
-                {
-                    QTextStream in(&originalFile);
-                    in.setEncoding(QStringConverter::Utf8);
-                    m_originalText->clear();
-                    m_originalText->setText(in.readAll());
-                    originalFile.close();
-                }
-
-                // 显示翻译结果
-                QFile resultFile(outputFilePath);
-                if (resultFile.open(QIODevice::ReadOnly | QIODevice::Text))
-                {
-                    QTextStream in(&resultFile);
-                    in.setEncoding(QStringConverter::Utf8);
-                    m_translatedText->clear();
-                    m_translatedText->setText(in.readAll());
-                    resultFile.close();
-                }
+                emit logMessage("翻译成功");
+            }
+            else
+            {
+                emit logMessage("翻译失败！！！");
             }
 
             delete translator;
