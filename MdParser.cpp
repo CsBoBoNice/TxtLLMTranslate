@@ -56,78 +56,80 @@ bool MdParser::parse(const QString &filePath)
 QList<QString> MdParser::splitIntoParagraphs(const QString &content)
 {
     QList<QString> paragraphs;
-    
+
     // 使用正则表达式匹配Markdown标题
     QRegularExpression titleRegex(R"(^#{1,6}\s+.*$)", QRegularExpression::MultilineOption);
-    
+
     // 按行分割内容
     QStringList lines = content.split('\n');
-    
+
     QString currentParagraph;
-    QString currentTitle;  // 保存当前标题
-    
-    for (int i = 0; i < lines.size(); ++i) {
+
+    for (int i = 0; i < lines.size(); ++i)
+    {
         QString line = lines[i];
-        
+
         // 检查是否是标题行
-        if (titleRegex.match(line.trimmed()).hasMatch()) {
+        if (titleRegex.match(line.trimmed()).hasMatch())
+        {
             // 保存之前的段落（如果存在）
-            if (!currentParagraph.isEmpty()) {
-                // 如果有标题，确保标题在段落开始
-                if (!currentTitle.isEmpty()) {
-                    paragraphs.append(currentTitle + currentParagraph);
-                } else {
-                    paragraphs.append(currentParagraph);
-                }
+            if (!currentParagraph.isEmpty())
+            {
+                paragraphs.append(currentParagraph);
                 currentParagraph.clear();
             }
-            // 保存新标题
-            currentTitle = line + "\n";
+
+            currentParagraph = line + "\n";
             continue;
         }
-        
+
         // 处理普通行
-        if (currentParagraph.length() + line.length() > m_maxLen) {
+        if (currentParagraph.length() + line.length() > m_maxLen)
+        {
             // 如果超过最大长度，保存当前段落
-            if (!currentParagraph.isEmpty()) {
-                if (!currentTitle.isEmpty()) {
-                    paragraphs.append(currentTitle + currentParagraph);
-                    currentTitle.clear();
-                } else {
-                    paragraphs.append(currentParagraph);
-                }
+            if (!currentParagraph.isEmpty())
+            {
+                paragraphs.append(currentParagraph);
                 currentParagraph.clear();
             }
         }
-        
+
         // 添加当前行
-        if (currentParagraph.isEmpty()) {
+        if (currentParagraph.isEmpty())
+        {
             currentParagraph = line + "\n";
-        } else {
+        }
+        else
+        {
             currentParagraph += line + "\n";
         }
-    }
-    
-    // 处理最后一个段落
-    if (!currentParagraph.isEmpty()) {
-        if (!currentTitle.isEmpty()) {
-            paragraphs.append(currentTitle + currentParagraph);
-        } else {
+
+        // 当前行以句号结尾
+        if (line.trimmed().endsWith("。") || line.trimmed().endsWith("."))
+        {
             paragraphs.append(currentParagraph);
+            currentParagraph.clear();
         }
     }
-    
+
+    // 处理最后一个段落
+    if (!currentParagraph.isEmpty())
+    {
+        paragraphs.append(currentParagraph);
+    }
+
     // 输出段落信息用于调试
     qDebug() << "分段完成，总段落数:" << paragraphs.size();
     qDebug() << "---段落详细信息---";
-    for (int i = 0; i < paragraphs.size(); ++i) {
+    for (int i = 0; i < paragraphs.size(); ++i)
+    {
         qDebug() << "段落" << i + 1 << ":";
         qDebug() << "内容:" << paragraphs[i];
         qDebug() << "长度:" << paragraphs[i].length();
         qDebug() << "是否为空行:" << paragraphs[i].trimmed().isEmpty();
         qDebug() << "----------------";
     }
-    
+
     return paragraphs;
 }
 
