@@ -60,13 +60,13 @@ FileType FileManager::determineFileType(const QString &fileName)
 {
     QString suffix = QFileInfo(fileName).suffix().toLower();
 
-    if (suffix == "txt")
+    if (suffix == "txt" || suffix == "TXT")
         return FileType::TXT_FILE;
-    if (suffix == "md")
+    if (suffix == "md" || suffix == "MD")
         return FileType::MD_FILE;
-    if (suffix == "rst")
+    if (suffix == "rst" || suffix == "RST")
         return FileType::RST_FILE;
-    if (suffix == "srt")
+    if (suffix == "srt" || suffix == "SRT")
         return FileType::SRT_FILE;
 
     return FileType::OTHER;

@@ -215,6 +215,8 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
     {
         FileTranslator *translator = nullptr;
 
+        QString outputFilePath = outputPath + "/" + file.fileName;
+
         switch (file.fileType)
         {
         case FileType::TXT_FILE:
@@ -227,11 +229,11 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
             translator = new MdTranslator(m_maxLen, m_minLen);
             break;
         default:
-            emit logMessage("跳过不支持的文件类型: " + file.fileName);
+            // 处理不支持的文件类型
+            emit logMessage("不支持的文件类型，将直接复制文件: " + file.fileName);
+            QFile::copy(file.filePath, outputFilePath);
             continue;
         }
-
-        QString outputFilePath = outputPath + "/" + file.fileName;
 
         if (translator)
         {
