@@ -44,14 +44,16 @@ bool MdTranslator::translate(const QString &inputFilePath, const QString &output
     // 用于计算平均处理时间
     QVector<int> processingTimes;
 
+    // 错误计数
+    int errCount = 0;
+
     // 遍历文本列表进行翻译
     for (int i = 0; i < mdInfoList.size(); ++i)
     {
         QTime itemStartTime = QTime::currentTime();
 
-        // 如果是空行或Markdown标题，直接保留不翻译
-        if (mdInfoList[i].content.trimmed().isEmpty() || 
-            mdInfoList[i].content.startsWith('#'))
+        // 如果是空行，直接保留不翻译
+        if (mdInfoList[i].content.trimmed().isEmpty())
         {
             mdInfoList[i].translateContent = mdInfoList[i].content;
             continue;
@@ -98,6 +100,7 @@ bool MdTranslator::translate(const QString &inputFilePath, const QString &output
         {
             outlog("[错误] 翻译失败，跳过当前段落");
             outlog("-------------------");
+            errCount++;
             continue;
         }
 
@@ -106,7 +109,7 @@ bool MdTranslator::translate(const QString &inputFilePath, const QString &output
         // 保存翻译结果
         if (!translation.isEmpty())
         {
-            mdInfoList[i].translateContent = translation;
+            mdInfoList[i].translateContent = translation + "\n\n";
             if (keepHistory)
             {
                 TranslateHistory history;
@@ -144,7 +147,7 @@ bool MdTranslator::translate(const QString &inputFilePath, const QString &output
             avgTime /= processingTimes.size();
 
             // 计算预计剩余时间
-            int remainingItems = mdInfoList.size() - (i + 1);
+            int remainingItems            = mdInfoList.size() - (i + 1);
             qint64 estimatedRemainingTime = avgTime * remainingItems;
 
             // 转换为更友好的时间格式
@@ -161,13 +164,13 @@ bool MdTranslator::translate(const QString &inputFilePath, const QString &output
             {
                 int minutes = estimatedRemainingTime / 60000;
                 int seconds = (estimatedRemainingTime % 60000) / 1000;
-                timeStr = QString("%1分%2秒").arg(minutes).arg(seconds);
+                timeStr     = QString("%1分%2秒").arg(minutes).arg(seconds);
             }
             else
             {
-                int hours = estimatedRemainingTime / 3600000;
+                int hours   = estimatedRemainingTime / 3600000;
                 int minutes = (estimatedRemainingTime % 3600000) / 60000;
-                timeStr = QString("%1小时%2分").arg(hours).arg(minutes);
+                timeStr     = QString("%1小时%2分").arg(hours).arg(minutes);
             }
 
             outlog(QString("平均处理时间: %1ms").arg(avgTime));
@@ -196,14 +199,14 @@ bool MdTranslator::translate(const QString &inputFilePath, const QString &output
     }
     else if (totalTime < 3600000)
     {
-        int minutes = totalTime / 60000;
-        int seconds = (totalTime % 60000) / 1000;
+        int minutes  = totalTime / 60000;
+        int seconds  = (totalTime % 60000) / 1000;
         totalTimeStr = QString("%1分%2秒").arg(minutes).arg(seconds);
     }
     else
     {
-        int hours = totalTime / 3600000;
-        int minutes = (totalTime % 3600000) / 60000;
+        int hours    = totalTime / 3600000;
+        int minutes  = (totalTime % 3600000) / 60000;
         totalTimeStr = QString("%1小时%2分").arg(hours).arg(minutes);
     }
 
@@ -211,7 +214,8 @@ bool MdTranslator::translate(const QString &inputFilePath, const QString &output
     outlog("输出文件: " + outputFilePath);
     outlog(QString("成功翻译 %1 个段落").arg(mdInfoList.size()));
     outlog(QString("总耗时: %1").arg(totalTimeStr));
-    return true;
+
+    return errCount == 0 ? true : false;
 }
 
 QString MdTranslator::buildPrompt(const QString &content, const PromptInfo &promptInfo)
@@ -245,4 +249,4 @@ void MdTranslator::outlog(const QString &log)
         m_logOutput->appendPlainText(formattedLog);
     }
     QCoreApplication::processEvents();
-} 
+}

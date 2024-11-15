@@ -4,9 +4,9 @@
 #include "llamaServerManager.h"
 #include <QCheckBox>
 #include <QLineEdit>
+#include <QPlainTextEdit>
 #include <QPushButton>
 #include <QWidget>
-
 class SettingsTab : public QWidget
 {
     Q_OBJECT
@@ -59,6 +59,14 @@ private:
 
     LlamaServerManager *m_llamaServer;
     QTimer *m_checkServerTimer;
+
+    QPlainTextEdit *m_logOutput; // 日志输出指针
+
+public:
+    void setLog(QPlainTextEdit *logOutput)
+    {
+        m_logOutput = logOutput;
+    }
 };
 
 #endif // _TAB_SETTINGS_H_

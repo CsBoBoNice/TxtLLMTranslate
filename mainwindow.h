@@ -5,6 +5,7 @@
 #include "TabTranslation.h"
 #include <QMainWindow>
 #include <QTabWidget>
+#include <QPlainTextEdit>
 
 class MainWindow : public QMainWindow
 {
@@ -27,6 +28,7 @@ private:
     SettingsTab *m_settingsTab;
     TranslationTab *m_translationTab;
     QString m_settingsPath;
+    QPlainTextEdit *m_logText;
 };
 
 #endif // MAINWINDOW_H

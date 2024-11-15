@@ -13,7 +13,7 @@
 #include <QVBoxLayout>
 
 SettingsTab::SettingsTab(QWidget *parent)
-    : QWidget(parent), m_checkServerTimer(nullptr), m_llamaServer(new LlamaServerManager(this))
+    : QWidget(parent), m_checkServerTimer(nullptr), m_llamaServer(new LlamaServerManager(this)), m_logOutput(nullptr)
 {
     createUI();
     setDefaultValues();
@@ -246,5 +246,3 @@ void SettingsTab::testApiConnection()
         emit logMessage("API连接测试失败");
     }
 }
-
-// 其余实现从MainWindow中移植相关方法

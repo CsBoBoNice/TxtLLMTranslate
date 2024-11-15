@@ -122,16 +122,6 @@ void TranslationTab::createUI()
 
     mainLayout->addLayout(buttonLayout);
 
-    // 日志显示区域
-    QGroupBox *logGroup    = new QGroupBox("运行日志", this);
-    QVBoxLayout *logLayout = new QVBoxLayout(logGroup);
-
-    m_logText = new QPlainTextEdit(this);
-    m_logText->setReadOnly(true);
-    logLayout->addWidget(m_logText);
-
-    mainLayout->addWidget(logGroup);
-
     // 连接信号槽
     connect(m_inputSelectBtn, &QPushButton::clicked, this, &TranslationTab::selectInputPath);
     connect(m_outputSelectBtn, &QPushButton::clicked, this, &TranslationTab::selectOutputPath);
@@ -244,7 +234,7 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
 
         if (translator)
         {
-            translator->setLog(m_logText);
+            translator->setLog(m_logOutput);
             bool success = translator->translate(file.filePath, outputFilePath, url, apiKey, model,
                                                  keepHistory);
 
@@ -284,17 +274,20 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
     }
 
     m_translateButton->setEnabled(true);
-    emit logMessage("翻译任务完成");
 }
 
 void TranslationTab::updateLog(const QString &log)
 {
-    m_logText->appendPlainText(log);
+    if (m_logOutput)
+    {
+        m_logOutput->appendPlainText(log);
+    }
     emit logMessage(log);
 }
 
 void TranslationTab::onTranslateClicked()
 {
+    m_logOutput->clear();
     emit requestTranslation();
 }
 

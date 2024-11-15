@@ -49,6 +49,13 @@ bool TxtTranslator::translate(const QString &inputFilePath, const QString &outpu
     // 遍历文本列表进行翻译
     for (int i = 0; i < txtInfoList.size(); ++i)
     {
+        // 如果是空行，直接保留不翻译
+        if (txtInfoList[i].content.trimmed().isEmpty())
+        {
+            txtInfoList[i].translateContent = txtInfoList[i].content;
+            continue;
+        }
+
         QTime itemStartTime = QTime::currentTime();
 
         // 处理用户提示列表
@@ -96,7 +103,7 @@ bool TxtTranslator::translate(const QString &inputFilePath, const QString &outpu
             continue;
         }
 
-        QString validTranslation = translation;
+        QString validTranslation = translation + "\n\n";
 
         outlog("译文: " + validTranslation);
 

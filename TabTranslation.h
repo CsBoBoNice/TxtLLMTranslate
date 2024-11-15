@@ -3,9 +3,9 @@
 
 #include "FileManager.h"
 #include "FileTranslator.h"
+#include "MdTranslator.h"
 #include "SrtTranslator.h"
 #include "TxtTranslator.h"
-#include "MdTranslator.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QCoreApplication>
@@ -52,7 +52,6 @@ private:
     QPushButton *m_translateButton;       // 翻译按钮
     QComboBox *m_fileTypeCombo;           // 文件类型选择下拉框
     QPushButton *m_editPromptButton;      // 编辑提示按钮
-    QPlainTextEdit *m_logText;            // 日志显示
     QCheckBox *m_keepHistoryCheck;        // 保留历史记录复选框
     QPushButton *m_setParagraphLengthBtn; // 段落长度设置按钮
 
@@ -62,6 +61,14 @@ private:
     // 段落长度限制
     int m_maxLen = 3072; // 最大段落长度
     int m_minLen = 1024; // 最小段落长度
+
+    QPlainTextEdit *m_logOutput; // 日志输出指针
+
+public:
+    void setLog(QPlainTextEdit *logOutput)
+    {
+        m_logOutput = logOutput;
+    }
 };
 
 #endif // _TAB_TRANSLATION_H
