@@ -99,6 +99,18 @@ void TranslationTab::createUI()
 
     mainLayout->addWidget(contentGroup);
 
+    // 在操作按钮区域和翻译内容区域之间添加进度输出区域
+    QGroupBox *progressGroup    = new QGroupBox("翻译进度", this);
+    QVBoxLayout *progressLayout = new QVBoxLayout(progressGroup);
+
+    m_progressOutput = new QPlainTextEdit(this);
+    m_progressOutput->setReadOnly(true);
+    m_progressOutput->setMaximumHeight(100); // 限制最大高度
+    m_progressOutput->setPlaceholderText("翻译进度将在此显示...");
+
+    progressLayout->addWidget(m_progressOutput);
+    mainLayout->addWidget(progressGroup);
+
     // 操作按钮区域
     QHBoxLayout *buttonLayout = new QHBoxLayout();
 
@@ -110,9 +122,9 @@ void TranslationTab::createUI()
     m_fileTypeCombo->addItem("SRT字幕", static_cast<int>(FileType::SRT_FILE));
     m_fileTypeCombo->addItem("MD文档", static_cast<int>(FileType::MD_FILE));
 
-    m_setParagraphLengthBtn = new QPushButton("设置段落长度", this);
-    m_editPromptButton      = new QPushButton("编辑提示", this);
-    m_translateButton       = new QPushButton("开始翻译", this);
+    m_setParagraphLengthBtn       = new QPushButton("设置段落长度", this);
+    m_editPromptButton            = new QPushButton("编辑提示", this);
+    m_translateButton             = new QPushButton("开始翻译", this);
     QPushButton *clearProgressBtn = new QPushButton("清除翻译进度", this);
 
     buttonLayout->addWidget(m_keepHistoryCheck);
@@ -131,7 +143,8 @@ void TranslationTab::createUI()
     connect(m_editPromptButton, &QPushButton::clicked, this, &TranslationTab::onEditPromptClicked);
     connect(m_setParagraphLengthBtn, &QPushButton::clicked, this,
             &TranslationTab::onSetParagraphLengthClicked);
-    connect(clearProgressBtn, &QPushButton::clicked, this, &TranslationTab::clearTranslationProgress);
+    connect(clearProgressBtn, &QPushButton::clicked, this,
+            &TranslationTab::clearTranslationProgress);
 
     // 添加滚动条同步
     connect(m_originalText->verticalScrollBar(), &QScrollBar::valueChanged,
@@ -190,7 +203,7 @@ void TranslationTab::onEditPromptClicked()
 
 void TranslationTab::startTranslate(const QString &url, const QString &apiKey, const QString &model)
 {
-    QString inputPath = m_inputPathEdit->text();
+    QString inputPath  = m_inputPathEdit->text();
     QString outputPath = m_outputPathEdit->text();
 
     if (inputPath.isEmpty() || outputPath.isEmpty())
@@ -211,79 +224,113 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
     m_isTranslating = true;
     m_originalText->clear();
     m_translatedText->clear();
+    m_progressOutput->clear();
 
-    bool keepHistory = m_keepHistoryCheck->isChecked();
+    bool keepHistory       = m_keepHistoryCheck->isChecked();
     QList<FileInfo> &files = m_fileManager.getFiles();
-    
+
+    // 显示总任务信息
+    m_progressOutput->appendPlainText(QString("待翻译文件总数: %1").arg(files.size()));
+    m_progressOutput->appendPlainText("----------------------------------------");
+
     // 检查是否有未完成的任务
     QString lastFile;
-    bool hasUnfinished = TranslationProgress::getInstance().hasUnfinishedTask(inputPath, outputPath, lastFile);
+    bool hasUnfinished =
+        TranslationProgress::getInstance().hasUnfinishedTask(inputPath, outputPath, lastFile);
     bool skipFiles = hasUnfinished;
-    
-    if (hasUnfinished) {
+
+    if (hasUnfinished)
+    {
         auto result = QMessageBox::question(this, "继续翻译",
-            "检测到上次未完成的翻译任务，是否从中断处继续？",
-            QMessageBox::Yes | QMessageBox::No);
-        
+                                            "检测到上次未完成的翻译任务，是否从中断处继续？",
+                                            QMessageBox::Yes | QMessageBox::No);
+
         skipFiles = (result == QMessageBox::Yes);
-        if (skipFiles) {
-            emit logMessage("将从文件 " + lastFile + " 继续翻译");
+        if (skipFiles)
+        {
+            m_progressOutput->appendPlainText(
+                QString("从上次中断的文件继续翻译: %1").arg(lastFile));
+            m_progressOutput->appendPlainText("----------------------------------------");
         }
     }
 
+    int completedFiles = 0;
     for (const FileInfo &file : files)
     {
         // 如果需要跳过之前已翻译的文件
-        if (skipFiles) {
-            if (file.fileName == lastFile) {
+        if (skipFiles)
+        {
+            if (file.fileName == lastFile)
+            {
                 skipFiles = false;
             }
-            if (skipFiles) {
+            if (skipFiles)
+            {
+                completedFiles++;
                 continue;
             }
         }
 
+        // 显示当前文件信息
+        m_progressOutput->appendPlainText(QString("[%1/%2] 当前文件: %3")
+                                              .arg(completedFiles + 1)
+                                              .arg(files.size())
+                                              .arg(file.fileName));
+        m_progressOutput->appendPlainText(
+            QString("文件类型: %1, 文件大小: %2 KB")
+                .arg(getFileTypeString(file.fileType))
+                .arg(QFileInfo(file.filePath).size() / 1024.0, 0, 'f', 2));
+        m_progressOutput->moveCursor(QTextCursor::End);
+        QApplication::processEvents();
+
         // 保存当前正在翻译的文件信息
         TranslationProgress::getInstance().saveProgress(inputPath, outputPath, file.fileName);
-        
+
         FileTranslator *translator = nullptr;
-        bool success = false;
+        bool success               = false;
 
         // 计算相对路径
         QString relativePath = QDir(inputPath).relativeFilePath(QFileInfo(file.filePath).path());
         // 构建输出文件的完整路径，保持目录结构
         QString outputDir = QDir(outputPath).absoluteFilePath(relativePath);
-        
+
         // 确保输出目录存在
         QDir().mkpath(outputDir);
-        
+
         QString outputFilePath = QDir(outputDir).absoluteFilePath(file.fileName);
 
         switch (file.fileType)
         {
-            case FileType::TXT_FILE:
-                translator = new TxtTranslator(m_maxLen, m_minLen);
-                break;
-            case FileType::SRT_FILE:
-                translator = new SrtTranslator();
-                break;
-            case FileType::MD_FILE:
-                translator = new MdTranslator(m_maxLen, m_minLen);
-                break;
-            default:
-                // 处理不支持的文件类型
-                emit logMessage("不支持的文件类型，将直接复制文件: " + file.fileName);
-                // 确保目标目录存在
-                QDir().mkpath(QFileInfo(outputFilePath).path());
-                QFile::copy(file.filePath, outputFilePath);
-                continue;
+        case FileType::TXT_FILE:
+            translator = new TxtTranslator(m_maxLen, m_minLen);
+            break;
+        case FileType::SRT_FILE:
+            translator = new SrtTranslator();
+            break;
+        case FileType::MD_FILE:
+            translator = new MdTranslator(m_maxLen, m_minLen);
+            break;
+        default:
+            // 处理不支持的文件类型
+            emit logMessage("不支持的文件类型，将直接复制文件: " + file.fileName);
+            // 确保目标目录存在
+            QDir().mkpath(QFileInfo(outputFilePath).path());
+            QFile::copy(file.filePath, outputFilePath);
+            completedFiles++;
+            continue;
         }
 
         if (translator)
         {
+            m_progressOutput->appendPlainText(
+                QString("正在翻译中... 翻译进度: %1%")
+                    .arg(completedFiles * 100.0 / files.size(), 0, 'f', 1));
+            m_progressOutput->moveCursor(QTextCursor::End);
+            QApplication::processEvents();
+
             translator->setLog(m_logOutput);
             success = translator->translate(file.filePath, outputFilePath, url, apiKey, model,
-                                             keepHistory);
+                                            keepHistory);
 
             // 读取并显示原文
             QFile originalFile(file.filePath);
@@ -309,11 +356,14 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
 
             if (success)
             {
-                emit logMessage("翻译成功");
+                completedFiles++;
+                m_progressOutput->appendPlainText("翻译完成");
+                m_progressOutput->appendPlainText("----------------------------------------");
             }
             else
             {
-                emit logMessage("翻译失败！！！");
+                m_progressOutput->appendPlainText("翻译失败！");
+                m_progressOutput->appendPlainText("----------------------------------------");
                 m_translateButton->setEnabled(true);
                 m_isTranslating = false;
                 delete translator;
@@ -322,7 +372,18 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
 
             delete translator;
         }
+
+        m_progressOutput->moveCursor(QTextCursor::End);
+        QApplication::processEvents();
     }
+
+    // 翻译完成后的处理
+    m_progressOutput->appendPlainText("\n翻译任务完成！");
+    m_progressOutput->appendPlainText(QString("成功翻译文件数: %1").arg(completedFiles));
+    m_progressOutput->appendPlainText(QString("总文件数: %1").arg(files.size()));
+    m_progressOutput->appendPlainText(
+        QString("完成时间: %1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")));
+    m_progressOutput->moveCursor(QTextCursor::End);
 
     // 翻译完成后清除进度
     TranslationProgress::getInstance().clearProgress();
@@ -426,4 +487,20 @@ void TranslationTab::clearTranslationProgress()
 {
     TranslationProgress::getInstance().clearProgress();
     emit logMessage("已清除翻译进度记录");
+}
+
+// 添加辅助函数用于获取文件类型的字符串描述
+QString TranslationTab::getFileTypeString(FileType type)
+{
+    switch (type)
+    {
+    case FileType::TXT_FILE:
+        return "TXT文本文件";
+    case FileType::SRT_FILE:
+        return "SRT字幕文件";
+    case FileType::MD_FILE:
+        return "Markdown文档";
+    default:
+        return "未知类型";
+    }
 }

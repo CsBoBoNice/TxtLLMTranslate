@@ -68,6 +68,12 @@ private:
 
     bool m_isTranslating = false;
 
+    // 添加进度输出控件
+    QPlainTextEdit *m_progressOutput;  // 进度输出文本框
+
+    // 添加辅助函数
+    QString getFileTypeString(FileType type);
+
 public:
     void setLog(QPlainTextEdit *logOutput)
     {

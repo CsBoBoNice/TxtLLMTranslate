@@ -49,7 +49,7 @@ void MainWindow::initUI()
     connect(m_translationTab, &TranslationTab::logMessage, this, &MainWindow::handleLogMessage);
     connect(m_translationTab, &TranslationTab::requestTranslation, this, &MainWindow::handleTranslationRequest);
 
-    setWindowTitle("字幕翻译工具");
+    setWindowTitle("翻译工具");
     resize(800, 800);
 }
 
