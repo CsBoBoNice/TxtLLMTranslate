@@ -187,7 +187,7 @@ void TranslationTab::onEditPromptClicked()
 
 void TranslationTab::startTranslate(const QString &url, const QString &apiKey, const QString &model)
 {
-    QString inputPath  = m_inputPathEdit->text();
+    QString inputPath = m_inputPathEdit->text();
     QString outputPath = m_outputPathEdit->text();
 
     if (inputPath.isEmpty() || outputPath.isEmpty())
@@ -208,31 +208,41 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
     m_originalText->clear();
     m_translatedText->clear();
 
-    bool keepHistory       = m_keepHistoryCheck->isChecked();
+    bool keepHistory = m_keepHistoryCheck->isChecked();
     QList<FileInfo> &files = m_fileManager.getFiles();
 
     for (const FileInfo &file : files)
     {
         FileTranslator *translator = nullptr;
 
-        QString outputFilePath = outputPath + "/" + file.fileName;
+        // 计算相对路径
+        QString relativePath = QDir(inputPath).relativeFilePath(QFileInfo(file.filePath).path());
+        // 构建输出文件的完整路径，保持目录结构
+        QString outputDir = QDir(outputPath).absoluteFilePath(relativePath);
+        
+        // 确保输出目录存在
+        QDir().mkpath(outputDir);
+        
+        QString outputFilePath = QDir(outputDir).absoluteFilePath(file.fileName);
 
         switch (file.fileType)
         {
-        case FileType::TXT_FILE:
-            translator = new TxtTranslator(m_maxLen, m_minLen);
-            break;
-        case FileType::SRT_FILE:
-            translator = new SrtTranslator();
-            break;
-        case FileType::MD_FILE:
-            translator = new MdTranslator(m_maxLen, m_minLen);
-            break;
-        default:
-            // 处理不支持的文件类型
-            emit logMessage("不支持的文件类型，将直接复制文件: " + file.fileName);
-            QFile::copy(file.filePath, outputFilePath);
-            continue;
+            case FileType::TXT_FILE:
+                translator = new TxtTranslator(m_maxLen, m_minLen);
+                break;
+            case FileType::SRT_FILE:
+                translator = new SrtTranslator();
+                break;
+            case FileType::MD_FILE:
+                translator = new MdTranslator(m_maxLen, m_minLen);
+                break;
+            default:
+                // 处理不支持的文件类型
+                emit logMessage("不支持的文件类型，将直接复制文件: " + file.fileName);
+                // 确保目标目录存在
+                QDir().mkpath(QFileInfo(outputFilePath).path());
+                QFile::copy(file.filePath, outputFilePath);
+                continue;
         }
 
         if (translator)
