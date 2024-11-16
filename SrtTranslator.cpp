@@ -83,7 +83,7 @@ bool SrtTranslator::translate(const QString &inputFilePath, const QString &outpu
         outlog("原文: " + displayContent);
 
         // 构建当前字幕的翻译提示
-        QString currentPrompt = buildPrompt(srtInfoList[i].content, promptInfo);
+        QString currentPrompt = buildPrompt(displayContent, promptInfo);
 
         // 创建新的用户提示列表，包含所有处理过的示例和当前字幕
         QVector<QString> finalUserPrompts = processedUserPrompts;
@@ -138,7 +138,7 @@ bool SrtTranslator::translate(const QString &inputFilePath, const QString &outpu
                 m_history.append(history);
 
                 // 保持历史记录不超过
-                const int maxHistory = 20;
+                const int maxHistory = 30;
                 while (m_history.size() > maxHistory)
                 {
                     m_history.removeFirst();
