@@ -124,17 +124,17 @@ void TranslationTab::createUI()
     m_fileTypeCombo->addItem("MD文档", static_cast<int>(FileType::MD_FILE));
     m_fileTypeCombo->addItem("RST文档", static_cast<int>(FileType::RST_FILE));
 
-    m_setParagraphLengthBtn       = new QPushButton("设置段落长度", this);
     m_editPromptButton            = new QPushButton("编辑提示", this);
-    m_translateButton             = new QPushButton("开始翻译", this);
+    m_setParagraphLengthBtn       = new QPushButton("设置段落长度", this);
     QPushButton *clearProgressBtn = new QPushButton("清除翻译进度", this);
+    m_translateButton             = new QPushButton("开始翻译", this);
 
     buttonLayout->addWidget(m_keepHistoryCheck);
     buttonLayout->addWidget(m_fileTypeCombo);
-    buttonLayout->addWidget(m_setParagraphLengthBtn);
     buttonLayout->addWidget(m_editPromptButton);
-    buttonLayout->addWidget(m_translateButton);
+    buttonLayout->addWidget(m_setParagraphLengthBtn);
     buttonLayout->addWidget(clearProgressBtn);
+    buttonLayout->addWidget(m_translateButton);
 
     mainLayout->addLayout(buttonLayout);
 
@@ -429,8 +429,8 @@ void TranslationTab::onSetParagraphLengthClicked()
     QSpinBox *minLengthBox  = new QSpinBox(&dialog);
 
     // 设置SpinBox的范围
-    maxLengthBox->setRange(1024, 4096);
-    minLengthBox->setRange(64, 1024);
+    maxLengthBox->setRange(512, 40960);
+    minLengthBox->setRange(64, 10240);
 
     // 使用当前保存的值作为初始值
     maxLengthBox->setValue(m_maxLen);
