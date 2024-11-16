@@ -30,8 +30,8 @@ void MainWindow::initUI()
     m_settingsTab = new SettingsTab(this);
     m_translationTab = new TranslationTab(this);
 
-    m_tabWidget->addTab(m_settingsTab, "AI服务设置");
     m_tabWidget->addTab(m_translationTab, "翻译界面");
+    m_tabWidget->addTab(m_settingsTab, "AI服务设置");
 
     QGroupBox *logGroup = new QGroupBox("运行日志", this);
     QVBoxLayout *logLayout = new QVBoxLayout(logGroup);
