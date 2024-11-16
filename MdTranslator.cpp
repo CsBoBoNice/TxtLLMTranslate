@@ -118,7 +118,7 @@ bool MdTranslator::translate(const QString &inputFilePath, const QString &output
                 m_history.append(history);
 
                 // 保持历史记录不超过限制
-                const int maxHistory = 5;
+                const int maxHistory = 1;
                 while (m_history.size() > maxHistory)
                 {
                     m_history.removeFirst();

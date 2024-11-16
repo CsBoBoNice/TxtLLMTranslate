@@ -40,17 +40,72 @@ void TxtPrompt::initDefaultPrompt()
 {
     // 设置默认值
     m_promptInfo.prompt =
-        "你是专业翻译员，你需要将待翻译内容成简体中文,翻译后仅输出翻译内容，无需其他解释说明。";
+        R"(
+- Role: 专业翻译员
+- Background: 用户需要将待翻译内容翻译成简体中文，并且需要保持文档的原始格式和专业术语的准确性。
+- Profile: 你是一位经验丰富的翻译专家，精通简体中文翻译，擅长技术文档的翻译工作。
+- Skills: 语言翻译能力、文档格式理解、专业术语准确性把控。
+- Goals: 确保文档翻译后，格式、结构、链接和图片标记保持原样，同时专业术语翻译准确无误。
+- Constrains: 翻译过程中，不得更改文档的任何非文本内容，包括链接、图片标记等。
+- OutputFormat: 翻译后的文档保持格式。翻译后仅输出翻译内容，无需其他解释说明。
+- Workflow:
+  1. 阅读并理解原文本内容及其格式。
+  2. 翻译文本内容，同时保留所有格式化指令。
+  3. 检查翻译后的文档，确保链接和图片标记未被更改，专业术语准确。
+- Initialization: 欢迎来到文档翻译服务，我将帮助您将待翻译内容翻译成简体中文，同时保留文档结构。请发送您需要翻译的文档。
+)";
     m_promptInfo.chatPrefix = "[待翻译内容开始]";
-    m_promptInfo.chatSuffix = "[待翻译内容结束]\n开始将待翻译内容翻译成简体中文。";
+    m_promptInfo.chatSuffix =
+        "[待翻译内容结束]\n开始将待翻译内容翻译成简体中文，仅输出翻译内容，无需其他解释说明。";
 
     // 设置默认的用户提示列表
-    m_promptInfo.userPromptList = {"The sun rises in the east and sets in the west.",
-                                   "Life is like a box of chocolates.", "Time waits for no one."};
+    m_promptInfo.userPromptList = {R"(
+GIF decoder
+Allow using GIF images in LVGL. Based on https://github.com/lecram/gifdec
+
+When enabled in `lv_conf.h` with `LV_USE_GIF` `lv_gif_create(parent)` can be used to create a gif widget.
+
+`lv_gif_set_src(obj, src)` works very similarly to `lv_img_set_src`. As source, it also accepts images as variables (`lv_img_dsc_t`) or files.
+
+
+Convert GIF files to C array
+To convert a GIF file to byte values array use [LVGL's online converter](https://lvgl.io/tools/imageconverter). Select "Raw" color format and "C array" Output format.
+
+
+Use GIF images from file
+For example:
+```c
+lv_gif_set_src(obj, "S:path/to/example.gif");
+```
+
+Note that, a file system driver needs to be registered to open images from files. Read more about it [here](https://docs.lvgl.io/master/overview/file-system.html) or just enable one in `lv_conf.h` with `LV_USE_FS_...`
+
+)"};
 
     // 设置默认的助手提示列表
-    m_promptInfo.assistantPromptList = {"太阳从东方升起，在西方落下。", "生活就像一盒巧克力。",
-                                        "时间不等人。"};
+    m_promptInfo.assistantPromptList = {R"(
+GIF解码器
+
+允许在LVGL中使用GIF图像。基于 https://github.com/lecram/gifdec
+
+在`lv_conf.h`中启用`LV_USE_GIF`后，可以使用`lv_gif_create(parent)`来创建一个GIF控件。
+
+`lv_gif_set_src(obj, src)`与`lv_img_set_src`非常相似。它也接受变量（`lv_img_dsc_t`）或文件作为图像源。
+
+将GIF文件转换为C数组
+
+要将GIF文件转换为字节数组，请使用[LVGL在线转换器](https://lvgl.io/tools/imageconverter)。选择“Raw”颜色格式和“C array”输出格式。
+
+从文件中使用GIF图像
+
+例如：
+```c
+lv_gif_set_src(obj, "S:path/to/example.gif");
+```
+
+请注意，需要注册文件系统驱动程序才能从文件中打开图像。更多信息请阅读[这里](https://docs.lvgl.io/master/overview/file-system.html)，或者在`lv_conf.h`中启用`LV_USE_FS_...`
+
+)"};
 }
 
 TxtPrompt::~TxtPrompt() {}
