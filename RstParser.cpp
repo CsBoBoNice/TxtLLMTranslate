@@ -56,77 +56,99 @@ bool RstParser::parse(const QString &filePath)
 QList<QString> RstParser::splitIntoParagraphs(const QString &content)
 {
     QList<QString> paragraphs;
-    
+
     // 使用正则表达式匹配RST标题行
     QRegularExpression titlePattern("^[=\\-`:\\'\\\"~\\^_\\*\\+#<>]+$");
-    
+
     // 按行分割内容
     QStringList lines = content.split('\n');
-    
+
     QString currentParagraph;
     QString lastLine;
-    bool isTitle = false;
+    QString nowLine;
 
-    for (int i = 0; i < lines.size(); ++i) {
-        QString line = lines[i];
-        
+    for (int i = 0; i < lines.size(); ++i)
+    {
+        nowLine = lines[i];
+
+        if (lastLine.isEmpty())
+        {
+            lastLine = nowLine + "\n";
+            continue;
+        }
+
         // 检查是否是标题行
-        if (titlePattern.match(line.trimmed()).hasMatch() && 
-            !lastLine.trimmed().isEmpty() && 
-            line.trimmed().length() >= lastLine.trimmed().length()) 
+        if (titlePattern.match(nowLine.trimmed()).hasMatch() && !lastLine.trimmed().isEmpty() &&
+            nowLine.trimmed().length() >= lastLine.trimmed().length())
         {
             // 当前行是标题的下划线，lastLine是标题文本
-            if (!currentParagraph.isEmpty()) {
+            if (!currentParagraph.isEmpty())
+            {
                 paragraphs.append(currentParagraph);
                 currentParagraph.clear();
             }
+
             // 将标题和下划线作为一个段落
-            currentParagraph = lastLine + "\n" + line + "\n";
-            paragraphs.append(currentParagraph);
-            currentParagraph.clear();
-            isTitle = true;
+            currentParagraph = lastLine;
+            lastLine         = nowLine + "\n";
             continue;
         }
-        
-        // 处理空行
-        if (line.trimmed().isEmpty()) {
-            if (!currentParagraph.isEmpty()) {
-                paragraphs.append(currentParagraph);
-                currentParagraph.clear();
-            }
-            paragraphs.append("\n");
-            lastLine = line;
-            continue;
-        }
-        
-        // 处理普通行
-        if (currentParagraph.isEmpty()) {
-            currentParagraph = line + "\n";
-        } else {
-            // 检查添加当前行是否会超过最大长度
-            if (currentParagraph.length() + line.length() > m_maxLen) {
-                paragraphs.append(currentParagraph);
-                currentParagraph = line + "\n";
-            } else {
-                currentParagraph += line + "\n";
-            }
-        }
-        
-        // 当前行以句号结尾
-        if (line.trimmed().endsWith(".")) {
-            if (!currentParagraph.isEmpty()) {
+
+        // 检查是否会超过最大长度
+        if (currentParagraph.length() + lastLine.length() > m_maxLen)
+        {
+            if (!currentParagraph.isEmpty())
+            {
                 paragraphs.append(currentParagraph);
                 currentParagraph.clear();
             }
         }
-        
-        lastLine = line;
-        isTitle = false;
+
+        // 添加当前行
+        if (currentParagraph.isEmpty())
+        {
+            currentParagraph = lastLine;
+        }
+        else
+        {
+            currentParagraph += lastLine;
+        }
+
+        // 以句号结尾
+        if (lastLine.trimmed().endsWith("."))
+        {
+            if (!currentParagraph.isEmpty())
+            {
+                paragraphs.append(currentParagraph);
+                currentParagraph.clear();
+            }
+        }
+
+        lastLine = nowLine + "\n";
     }
 
     // 处理最后一个段落
-    if (!currentParagraph.isEmpty()) {
-        paragraphs.append(currentParagraph);
+    if (currentParagraph.isEmpty())
+    {
+        currentParagraph = lastLine + nowLine + "\n";
+    }
+    else
+    {
+        currentParagraph += lastLine + nowLine + "\n";
+    }
+
+    paragraphs.append(currentParagraph);
+
+    // 输出段落信息用于调试
+    qDebug() << "分段完成，总段落数:" << paragraphs.size();
+    qDebug() << "---段落详细信息---";
+    for (int i = 0; i < paragraphs.size(); ++i)
+    {
+        qDebug() << "段落" << i + 1 << ":";
+        qDebug() << "内容:" << paragraphs[i];
+        qDebug() << "长度:" << paragraphs[i].length();
+        qDebug() << "是否为空行:" << paragraphs[i].trimmed().isEmpty();
+        qDebug() << "----------------";
     }
 
     return paragraphs;
@@ -139,17 +161,6 @@ QList<QString> RstParser::processParagraphs(const QList<QString> &paragraphs)
 
     for (const QString &paragraph : paragraphs)
     {
-        // 如果是空行，直接添加
-        if (paragraph.trimmed().isEmpty())
-        {
-            if (!currentParagraph.isEmpty())
-            {
-                processedParagraphs.append(currentParagraph);
-                currentParagraph.clear();
-            }
-            processedParagraphs.append(paragraph);
-            continue;
-        }
 
         // 如果合并后的长度小于最大长度，尝试合并
         if (currentParagraph.length() + paragraph.length() <= m_maxLen)
@@ -164,7 +175,7 @@ QList<QString> RstParser::processParagraphs(const QList<QString> &paragraphs)
                 currentParagraph += paragraph;
             }
         }
-        // 如果当前段落已经达到或超过最小长度
+        // 如果当前段落已经达到或超过最小长度，
         else if (currentParagraph.length() >= m_minLen)
         {
             processedParagraphs.append(currentParagraph);
@@ -177,7 +188,7 @@ QList<QString> RstParser::processParagraphs(const QList<QString> &paragraphs)
         }
     }
 
-    // 处理最后一个段落
+    // 处理最后一个段落 - 直接添加，不进行合并
     if (!currentParagraph.isEmpty())
     {
         processedParagraphs.append(currentParagraph);
@@ -214,4 +225,4 @@ bool RstParser::save(const QString &filePath, const QVector<RstInfo> &rstInfoLis
     file.close();
     qDebug() << "成功保存RST文件:" << filePath;
     return true;
-} 
+}
