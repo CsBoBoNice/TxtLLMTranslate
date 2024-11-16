@@ -95,10 +95,12 @@ bool OpenaiManager::testApi(const QString &url, const QString &apiKey, const QSt
     try
     {
         // 使用默认的测试提示
-        QString testPrompt           = "你是一个助手";
-        QVector<QString> userPrompts = {"你好"};
+        QString testPrompt           = "You are a useful assistant!";
+        QVector<QString> userPrompts = {"hi", "How are you?"};
+        QVector<QString> assistantPrompts = {"Hello!"};
 
-        QString response = sendMessage(url, apiKey, model, testPrompt, userPrompts);
+        QString response = sendMessage(url, apiKey, model, testPrompt, userPrompts, assistantPrompts);
+        qDebug() << "测试响应:" << response;
         return !response.isEmpty();
     }
     catch (...)

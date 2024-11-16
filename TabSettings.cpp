@@ -13,7 +13,8 @@
 #include <QVBoxLayout>
 
 SettingsTab::SettingsTab(QWidget *parent)
-    : QWidget(parent), m_checkServerTimer(nullptr), m_llamaServer(new LlamaServerManager(this)), m_logOutput(nullptr)
+    : QWidget(parent), m_checkServerTimer(nullptr), m_llamaServer(new LlamaServerManager(this)),
+      m_logOutput(nullptr)
 {
     createUI();
     setDefaultValues();
@@ -201,7 +202,10 @@ void SettingsTab::onLocalAIToggled(bool checked)
                         QMessageBox::information(this, "成功", "本地AI服务已启动");
                     }
                 });
-        m_checkServerTimer->start(1000);
+
+        emit logMessage("本地AI服务正在启动请稍等...");
+
+        m_checkServerTimer->start(3000);
     }
     else
     {
@@ -229,6 +233,9 @@ void SettingsTab::testApiConnection()
     QString model  = m_modelEdit->text();
 
     emit logMessage("正在测试API连接...");
+
+    m_testResult->setText("正在测试API连接...");
+    m_testResult->setStyleSheet("color: black;");
 
     OpenaiManager *manager = OpenaiManager::getInstance();
     bool success           = manager->testApi(url, apiKey, model);
