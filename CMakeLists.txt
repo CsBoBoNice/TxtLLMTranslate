@@ -54,6 +54,12 @@ set(PROJECT_SOURCES
         MdPrompt.h
         TranslationProgress.cpp
         TranslationProgress.h
+        RstParser.cpp
+        RstParser.h
+        RstTranslator.cpp
+        RstTranslator.h
+        RstPrompt.cpp
+        RstPrompt.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

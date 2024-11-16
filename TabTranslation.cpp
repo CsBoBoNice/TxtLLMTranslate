@@ -3,6 +3,7 @@
 #include "PromptEditor.h"
 #include "SrtPrompt.h"
 #include "TxtPrompt.h"
+#include "RstPrompt.h"
 #include <QDir>
 #include <QFileDialog>
 #include <QGroupBox>
@@ -121,6 +122,7 @@ void TranslationTab::createUI()
     m_fileTypeCombo->addItem("TXT文件", static_cast<int>(FileType::TXT_FILE));
     m_fileTypeCombo->addItem("SRT字幕", static_cast<int>(FileType::SRT_FILE));
     m_fileTypeCombo->addItem("MD文档", static_cast<int>(FileType::MD_FILE));
+    m_fileTypeCombo->addItem("RST文档", static_cast<int>(FileType::RST_FILE));
 
     m_setParagraphLengthBtn       = new QPushButton("设置段落长度", this);
     m_editPromptButton            = new QPushButton("编辑提示", this);
@@ -188,6 +190,9 @@ void TranslationTab::onEditPromptClicked()
         break;
     case FileType::MD_FILE:
         prompt = MdPrompt::getInstance();
+        break;
+    case FileType::RST_FILE:
+        prompt = RstPrompt::getInstance();
         break;
     default:
         QMessageBox::warning(this, "警告", "暂不支持该文件类型的提示词编辑");
@@ -309,6 +314,9 @@ void TranslationTab::startTranslate(const QString &url, const QString &apiKey, c
             break;
         case FileType::MD_FILE:
             translator = new MdTranslator(m_maxLen, m_minLen);
+            break;
+        case FileType::RST_FILE:
+            translator = new RstTranslator(m_maxLen, m_minLen);
             break;
         default:
             // 处理不支持的文件类型
@@ -500,6 +508,8 @@ QString TranslationTab::getFileTypeString(FileType type)
         return "SRT字幕文件";
     case FileType::MD_FILE:
         return "Markdown文档";
+    case FileType::RST_FILE:
+        return "reStructuredText文档";
     default:
         return "未知类型";
     }

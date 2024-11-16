@@ -7,6 +7,8 @@
 #include "SrtTranslator.h"
 #include "TxtTranslator.h"
 #include "TranslationProgress.h"
+#include "RstTranslator.h"
+#include "RstPrompt.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QCoreApplication>
